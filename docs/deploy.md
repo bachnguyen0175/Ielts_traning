@@ -19,15 +19,18 @@ local CLI deploy could upload gitignored files from disk — don't.
 
 1. **vercel.com → Add New… → Project**.
 2. **Import** `bachnguyen0175/Ielts_traning`.
-3. Framework auto-detects **Next.js**. Confirm **Root Directory = `apps/web`**
-   (set by [`vercel.json`](../vercel.json); verify it shows).
+3. Framework auto-detects **Next.js**. In the import screen set
+   **Root Directory = `apps/web`** (see below).
 4. **Environment variables: none** (mock-first — no DB/auth/AI yet).
 5. **Deploy.** Pushes to `main` then auto-deploy.
 
 ## Config
 
-- [`vercel.json`](../vercel.json) → `{ "rootDirectory": "apps/web" }`. Equivalent
-  to setting Root Directory in Project Settings.
+- **Root Directory = `apps/web` is a Project Setting, NOT `vercel.json`.** Vercel
+  rejects `rootDirectory` in `vercel.json` (`Invalid request: should NOT have
+  additional property rootDirectory`). Set it in the import screen, or later at
+  **Settings → Build & Deployment → Root Directory**. There is no `vercel.json`
+  in this repo — none is needed.
 - pnpm workspace + Next.js are auto-detected; install runs from the repo root so
   the `@composed/domain` workspace package resolves. Keep the install command at
   the default `pnpm install`.
