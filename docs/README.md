@@ -31,6 +31,7 @@ concern; start here to navigate.
 | **Screen** | [`features/vocabulary.md`](./features/vocabulary.md) | Save words + flashcard study (`/vocab`, REV-7) |
 | **Screen** | [`features/progress.md`](./features/progress.md) | Attempt history, retake, target (`/progress`) |
 | **Reference** | [`mock-data-registry.md`](./mock-data-registry.md) | Every placeholder/mock datum → BE-phase replacement |
+| **Ops** | [`deploy.md`](./deploy.md) | Vercel deploy (public, sample-only; Cambridge never deployed) |
 | **Skill spec** | [`features/listening.md`](./features/listening.md) | Play-once audio, single timer |
 | **Skill spec** | [`features/reading.md`](./features/reading.md) | 60-min block, highlight/review tools |
 | **Skill spec** | [`features/writing.md`](./features/writing.md) | 20/40 split, submission capture |

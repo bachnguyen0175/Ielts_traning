@@ -1,0 +1,56 @@
+# Deployment
+
+> Status: 🟢 v1 — Vercel, public, **sample content only**. Cambridge content is
+> never deployed (copyright — see [ADR-0006](./architecture/decisions/0006-content-ingestion.md),
+> [mock-data-registry](./mock-data-registry.md)).
+
+## What deploys
+
+The public site serves **only original content** — the sample mock (all four
+skills) + Vocabulary/Flashcards. The Cambridge `*.data.json` files are gitignored
+**and** `ingested/index.ts` defaults to `[]`, so ingested content **cannot** reach
+a deployment. This is intentional and non-negotiable while the app is public.
+
+## Deploy from GitHub (the safe path)
+
+Deploy from the **Git integration**, not a local `vercel --prod`. Git builds the
+*committed* repo, where the copyrighted data files are absent by construction. A
+local CLI deploy could upload gitignored files from disk — don't.
+
+1. **vercel.com → Add New… → Project**.
+2. **Import** `bachnguyen0175/Ielts_traning`.
+3. Framework auto-detects **Next.js**. Confirm **Root Directory = `apps/web`**
+   (set by [`vercel.json`](../vercel.json); verify it shows).
+4. **Environment variables: none** (mock-first — no DB/auth/AI yet).
+5. **Deploy.** Pushes to `main` then auto-deploy.
+
+## Config
+
+- [`vercel.json`](../vercel.json) → `{ "rootDirectory": "apps/web" }`. Equivalent
+  to setting Root Directory in Project Settings.
+- pnpm workspace + Next.js are auto-detected; install runs from the repo root so
+  the `@composed/domain` workspace package resolves. Keep the install command at
+  the default `pnpm install`.
+
+## Troubleshooting
+
+| Symptom | Fix |
+|---------|-----|
+| `Module not found: *.data.json` | Stale checkout with the old loader — ensure `ingested/index.ts` is the committed `[]` default. |
+| `@composed/domain` not found at install | Unset any custom Install Command; let Vercel run default `pnpm install` from the repo root. |
+| Build can't find the app | Set **Settings → Build & Deployment → Root Directory = `apps/web`**. |
+
+## Pre-deploy gate
+
+Confirm a clean checkout builds without ingested content (mirrors Vercel):
+
+```bash
+pnpm test && pnpm lint && pnpm build   # with no *.data.json present → sample-only
+```
+
+## Going public with real content (future)
+
+A public **product** cannot use Cambridge content without a licence. Replace it
+with original or licensed passages, or licence from Cambridge, before relying on
+ingested content in production. Optionally gate the whole app with Vercel
+**Deployment Protection** (password) while it's pre-launch.
