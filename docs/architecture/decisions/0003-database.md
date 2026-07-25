@@ -1,31 +1,45 @@
 # ADR-0003: Database
 
-> Status: 🔴 Proposed / open
+> Status: Accepted (BE phase) — Neon Postgres + Drizzle ORM
 > Date: 2026-07-25
 
 ## Context
 
 The data model ([data-model.md](../data-model.md)) is relational: users,
-attempts, tests, sections, questions, responses, submissions. We need durable
-storage plus blob storage for audio.
+attempts, responses, submissions, plus saved vocabulary. FE phase persisted
+these in localStorage behind a repository seam
+(`apps/web/src/lib/data/*Repository`). BE phase swaps in durable storage. The app
+runs on Vercel; auth ([ADR-0002](./0002-auth-provider.md)) needs the same DB.
 
 ## Decision
 
-**Deferred to implementation, pending finalized feature scope** (2026-07-25).
-The schema is validated against a real Reading test, but the full feature set
-isn't settled — and storage requirements (relational depth, blob needs,
-analytics) depend on it. We choose the database once scope is locked rather than
-pick for requirements we haven't defined. Leaning relational (Postgres); blob
-storage likely Vercel Blob.
+**Neon Postgres** (serverless, Vercel-native) with **Drizzle ORM**.
+
+- **Neon** — serverless Postgres, generous free tier, provisioned via the Vercel
+  Marketplace integration (auto-injects the connection string env var).
+- **Drizzle** — lightweight, type-safe, serverless/edge-friendly, first-class
+  Neon HTTP driver, and an official Auth.js adapter. SQL migrations checked in.
+- **Repository seam unchanged:** implement `ProfileRepository`,
+  `AttemptRepository`, `VocabRepository` against Drizzle behind the existing
+  interfaces — screens don't change.
+- **Content snapshot:** persist the answer key / scoring server-side; snapshot
+  the sat test's scoring data into the attempt so results are reproducible and
+  keys never reach the client before submit (enforces the deferred fidelity
+  rule).
+- **Audio (Speaking):** stored in **Vercel Blob** later; DB holds URLs + metadata.
 
 ## Alternatives considered
 
-- **Postgres (e.g. Neon on Vercel Marketplace)** — fits the relational model,
-  serverless-friendly.
-- **Other managed SQL / ORM combos** — evaluate DX (Prisma/Drizzle) alongside.
+- **Neon + Drizzle (chosen)** — serverless fit, type-safety, Auth.js adapter,
+  minimal runtime.
+- **Prisma** — heavier client/engine, less edge-friendly; rejected for Drizzle.
+- **Supabase Postgres** — fine, but we chose open-source Auth.js over Supabase
+  Auth, so no need for the bundle.
 
 ## Consequences
 
-- ORM choice affects migration workflow and type-safety.
-- Audio blobs stored separately; DB holds URLs + metadata.
-- Decide whether to snapshot test-version content into attempts (recommended).
+- Migration workflow via `drizzle-kit` (SQL migrations in the repo).
+- `DATABASE_URL` (Neon) required locally (`.env.local`) and on Vercel.
+- Same DB holds Auth.js tables + app tables, keyed off `users.id`.
+- Implementation APIs (Drizzle, Neon driver) grounded in current docs at build
+  time — memorized APIs are stale.

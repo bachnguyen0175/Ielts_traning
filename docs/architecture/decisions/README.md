@@ -14,8 +14,8 @@ an ADR — supersede it with a new one and mark the old as `Superseded`.
 | # | Decision | Status |
 |---|----------|--------|
 | [0001](./0001-tech-stack.md) | Next.js + Vercel + AI SDK | Accepted |
-| [0002](./0002-auth-provider.md) | Auth provider | 🔴 Proposed / open |
-| [0003](./0003-database.md) | Database choice | 🔴 Proposed / open |
+| [0002](./0002-auth-provider.md) | Auth — Auth.js (NextAuth v5) + Google OAuth | Accepted |
+| [0003](./0003-database.md) | Database — Neon Postgres + Drizzle ORM | Accepted |
 | [0004](./0004-attempt-resumability.md) | Attempt resumability | Accepted (resume w/ elapsed-time) |
 | [0005](./0005-repo-structure.md) | Repo structure — pnpm-workspace monorepo (`apps/web`) | Accepted |
 | [0006](./0006-content-ingestion.md) | Cambridge content ingestion (seed-anchored, gitignored output) | Accepted |
