@@ -28,9 +28,12 @@ printed, never silently trusted.
 
 Output is a playable `Test` JSON at
 `apps/web/src/lib/content/ingested/<id>.reading.data.json`, which is
-**gitignored**. A committed loader (`ingested/index.ts`) static-imports it into
-the content repository, so the test appears in `/tests` and is sittable +
-auto-scored.
+**gitignored**. The committed loader (`ingested/index.ts`) defaults to an **empty
+list**, so a fresh clone / Vercel build succeeds with only the sample mock
+(Cambridge content is never public). Running the ingester **regenerates
+`index.ts` locally** to static-import the data files and marks it
+`git update-index --skip-worktree`, so the local edit is never committed. Result:
+Cambridge is playable locally, absent from git and from any deployment.
 
 ## Alternatives considered
 
@@ -41,15 +44,22 @@ auto-scored.
 - **Crawler answers as source of truth** — skip the seed. Rejected: less reliable
   than a hand-verified key; the seed also documents question types/instructions.
 - **`require.context` glob loader** — tried; unsupported under Turbopack (silently
-  returned `[]`). Replaced with a static import.
+  returned `[]`).
+- **`import.meta.glob`** — works in Turbopack's *client* bundle + Vitest, but is
+  **not replaced in the server bundle**, so it throws at SSR prerender of the
+  `/tests` server component. Rejected.
+- **Plain static import of the gitignored file** — works locally but a fresh
+  clone / Vercel build fails (`Module not found`). Rejected once deployment
+  became a goal → replaced by the `[]`-default + skip-worktree scheme above.
 
 ## Consequences
 
-- Prose never enters git; the gitignored `*.data.json` is bundled locally
-  (gitignore doesn't affect bundling), so the test is playable on this machine.
-- **Trade-off:** a fresh clone without the data file won't build until the
-  ingester regenerates it — acceptable for a private, single-dev tool, documented
-  in `ingested/README.md`.
+- Prose never enters git **and never reaches a deployment** — the committed
+  default is `[]`; the data-importing `index.ts` exists only in the local
+  worktree (skip-worktree).
+- **Build is deploy-safe:** fresh clone / Vercel builds succeed (sample-only). To
+  restore Cambridge locally, run the ingester (one command); documented in
+  `ingested/README.md`.
 - Verified on Cambridge 15 Test 1: 3 passages of clean prose (892/800/928 words),
   36/40 question stems, 40/40 keys (crawler agrees with the seed on 38; the 2
   diffs are formatting artifacts). Sat end-to-end to a reading band.

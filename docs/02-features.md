@@ -15,10 +15,12 @@ real DB/auth/AI scoring still deferred to the BE phase). Screens delivered:
 |--------|-------|-------------|-------------------|
 | Landing | `/` | [landing-page](./features/landing-page.md) | LP-1..4 |
 | Onboarding | `/start` | [onboarding](./features/onboarding.md) | ON-1(guest)/2/3 |
+| Test library | `/tests` | [test-library](./features/test-library.md) | catalog, per-test start |
 | Pre-test gate | `/mock` | [pre-test](./features/pre-test.md) | PT-1..5 |
 | Test player | `/mock/run` | [test-player](./features/test-player.md) | SIT-1/2/3/5/6/7/8/9/10/12 |
 | Results | `/mock/results` | [results](./features/results.md) | RES-1/2/3/4/5 |
 | Review | `/mock/review` | [review](./features/review.md) | REV-1/2/3/4 |
+| Vocabulary | `/vocab` | [vocabulary](./features/vocabulary.md) | REV-7 (FE; SRS mocked) |
 | Progress | `/progress` | [progress](./features/progress.md) | PROG-1/2/3(partial) |
 
 Shared: `@composed/domain` (scorer, band conversion, timing) + `lib/data`
@@ -123,7 +125,7 @@ full-length content, analytics.
 | REV-4 | Speaking audio playback + self-checklist | MVP | blob |
 | REV-5 | Answer explanations | P4 | content authoring |
 | REV-6 | AI feedback on Writing / Speaking | P2 / P3 | AI SDK |
-| REV-7 | **Vocabulary annotation** — save words from passages/transcripts during Review, with an optional **flashcard / spaced-repetition** study interface | P4 | DB; ⚠️ see notes |
+| REV-7 | **Vocabulary annotation** — save words from passages/transcripts during Review, with an optional **flashcard / spaced-repetition** study interface | P4 → **FE built** (`/vocab`; SRS mocked) | DB + real SRS (BE); ⚠️ see notes |
 
 **REV-7 notes (recorded caveats):**
 - **Off-core:** a study/retention feature, not a test-condition one. Nudges

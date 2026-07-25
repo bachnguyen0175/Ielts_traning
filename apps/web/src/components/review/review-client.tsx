@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import type { Test } from "@composed/domain";
 import { contentRepo, attemptRepo } from "@/lib/data/client";
 import { ReviewView } from "./review-view";
+import { VocabCapture } from "@/components/vocab/vocab-capture";
 
 interface Loaded {
   test: Test;
@@ -48,11 +49,14 @@ export function ReviewClient() {
   }
 
   return (
-    <ReviewView
-      test={loaded.test}
-      responses={loaded.responses}
-      submissions={loaded.submissions}
-      audioUrls={loaded.audioUrls}
-    />
+    <div className="space-y-10">
+      <ReviewView
+        test={loaded.test}
+        responses={loaded.responses}
+        submissions={loaded.submissions}
+        audioUrls={loaded.audioUrls}
+      />
+      <VocabCapture source={loaded.test.title} />
+    </div>
   );
 }

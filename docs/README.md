@@ -28,14 +28,16 @@ concern; start here to navigate.
 | **Screen** | [`features/test-player.md`](./features/test-player.md) | Timed sitting, timing engine, autosave (`/mock/run`) |
 | **Screen** | [`features/results.md`](./features/results.md) | Objective bands + pending W/S (`/mock/results`) |
 | **Screen** | [`features/review.md`](./features/review.md) | Answer review + band criteria (`/mock/review`) |
+| **Screen** | [`features/vocabulary.md`](./features/vocabulary.md) | Save words + flashcard study (`/vocab`, REV-7) |
 | **Screen** | [`features/progress.md`](./features/progress.md) | Attempt history, retake, target (`/progress`) |
+| **Reference** | [`mock-data-registry.md`](./mock-data-registry.md) | Every placeholder/mock datum → BE-phase replacement |
 | **Skill spec** | [`features/listening.md`](./features/listening.md) | Play-once audio, single timer |
 | **Skill spec** | [`features/reading.md`](./features/reading.md) | 60-min block, highlight/review tools |
 | **Skill spec** | [`features/writing.md`](./features/writing.md) | 20/40 split, submission capture |
 | **Skill spec** | [`features/speaking.md`](./features/speaking.md) | 3-part format, timed prompts + audio capture |
 
 **Full mock flow:** `/` → `/start` → `/tests` → `/mock?test=<id>` → `/mock/run`
-→ `/mock/results` → `/mock/review` · `/progress`.
+→ `/mock/results` → `/mock/review` · `/progress` · `/vocab`.
 
 ## Locked decisions (2026-07-25)
 

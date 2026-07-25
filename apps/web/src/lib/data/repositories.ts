@@ -29,6 +29,20 @@ export interface Profile {
   testDate?: string;
 }
 
+/** A saved vocabulary word for post-test flashcard study (REV-7). */
+export interface VocabItem {
+  id: string;
+  term: string;
+  definition?: string;
+  /** where it was encountered, e.g. a test/passage title */
+  source?: string;
+  createdAt: number;
+  /** Leitner box (mock mastery level) — see lib/srs.ts (placeholder) */
+  box: number;
+  /** mock next-review timestamp — see lib/srs.ts (placeholder) */
+  dueAt: number;
+}
+
 export interface ContentRepository {
   listTests(): TestSummary[];
   getTest(id: string): Test | undefined;
@@ -37,6 +51,15 @@ export interface ContentRepository {
 export interface ProfileRepository {
   get(): Profile | null;
   save(profile: Profile): void;
+}
+
+export interface VocabRepository {
+  list(): VocabItem[];
+  /** returns the created item, or null if the term was blank */
+  add(input: { term: string; definition?: string; source?: string }): VocabItem | null;
+  remove(id: string): void;
+  /** grade a card: promotes/resets its Leitner box (mock SRS) */
+  review(id: string, remembered: boolean): void;
 }
 
 export interface AttemptRepository {

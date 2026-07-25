@@ -15,7 +15,7 @@ Usage:
 
 Stdlib only (no third-party deps).
 """
-import argparse, html as htmlmod, json, re, sys, urllib.request
+import argparse, html as htmlmod, json, re, subprocess, sys, urllib.request
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[2]
@@ -129,6 +129,7 @@ def main() -> int:
     out_dir = REPO / "apps/web/src/lib/content/ingested"
     out = out_dir / f"{test['id']}.reading.data.json"
     out.write_text(json.dumps(test, ensure_ascii=False, indent=2))
+    regen_index(out_dir)
 
     for i, p in enumerate(test["sections"][0]["passages"]):
         nq = sum(len(g["questions"]) for g in p["questionGroups"])
@@ -137,6 +138,41 @@ def main() -> int:
     print("Answer cross-check vs seed:", mism or "all agree")
     print("Wrote", out.relative_to(REPO), "(gitignored)")
     return 0
+
+
+def regen_index(out_dir: Path) -> None:
+    """Rewrite index.ts to static-import every local *.data.json, then mark it
+    skip-worktree so this local edit is never committed (the committed default
+    stays `[]` → Vercel/fresh-clone builds are sample-only). See ADR-0006."""
+    data_files = sorted(p.name for p in out_dir.glob("*.data.json"))
+    index = out_dir / "index.ts"
+    if not data_files:
+        return
+    lines = ['import type { Test } from "@composed/domain";', ""]
+    names = []
+    for i, f in enumerate(data_files):
+        var = f"t{i}"
+        names.append(var)
+        lines.append(f'import {var} from "./{f}";')
+    lines += [
+        "",
+        "// ⚠️ GENERATED LOCALLY by content/ingest/ingest.py — do NOT commit.",
+        "// git skip-worktree keeps this out of version control; the committed",
+        "// default is an empty list. See docs/mock-data-registry.md.",
+        "export const INGESTED_TESTS: Test[] = ["
+        + ", ".join(f"{n} as unknown as Test" for n in names)
+        + "];",
+        "",
+    ]
+    index.write_text("\n".join(lines))
+    rel = str(index.relative_to(REPO))
+    try:  # best-effort; requires index.ts to be tracked (committed) first
+        subprocess.run(["git", "update-index", "--skip-worktree", rel],
+                       cwd=REPO, check=True, capture_output=True)
+        print(f"Regenerated {rel} (skip-worktree set — git will ignore this edit)")
+    except Exception:
+        print(f"Regenerated {rel} — ⚠️ commit index.ts first, then re-run so "
+              "skip-worktree can protect this local edit from being committed.")
 
 
 if __name__ == "__main__":

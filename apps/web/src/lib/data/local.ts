@@ -1,12 +1,15 @@
 import type { Attempt, SectionScore, Submission, Test } from "@composed/domain";
 import { SAMPLE_MOCK } from "../content/sample-mock";
 import { INGESTED_TESTS } from "../content/ingested";
+import { dueAt, reviewCard } from "../srs";
 import type {
   AttemptRepository,
   ContentRepository,
   Profile,
   ProfileRepository,
   TestSummary,
+  VocabItem,
+  VocabRepository,
 } from "./repositories";
 
 export interface StorageLike {
@@ -58,6 +61,57 @@ export class MockContentRepository implements ContentRepository {
   }
   getTest(id: string) {
     return TESTS.find((t) => t.id === id);
+  }
+}
+
+const VOCAB_KEY = "composed.vocab";
+
+export class LocalVocabRepository implements VocabRepository {
+  constructor(
+    private storage: StorageLike,
+    private now: () => number = () => Date.now(),
+    private genId: () => string = defaultId
+  ) {}
+
+  private readAll(): VocabItem[] {
+    const raw = this.storage.getItem(VOCAB_KEY);
+    return raw ? (JSON.parse(raw) as VocabItem[]) : [];
+  }
+  private writeAll(all: VocabItem[]): void {
+    this.storage.setItem(VOCAB_KEY, JSON.stringify(all));
+  }
+
+  list(): VocabItem[] {
+    return this.readAll();
+  }
+
+  add(input: { term: string; definition?: string; source?: string }): VocabItem | null {
+    const term = input.term.trim();
+    if (!term) return null;
+    const now = this.now();
+    const item: VocabItem = {
+      id: this.genId(),
+      term,
+      definition: input.definition?.trim() || undefined,
+      source: input.source,
+      createdAt: now,
+      box: 0,
+      dueAt: dueAt(0, now),
+    };
+    this.writeAll([...this.readAll(), item]);
+    return item;
+  }
+
+  remove(id: string): void {
+    this.writeAll(this.readAll().filter((i) => i.id !== id));
+  }
+
+  review(id: string, remembered: boolean): void {
+    const all = this.readAll();
+    const item = all.find((i) => i.id === id);
+    if (!item) return;
+    Object.assign(item, reviewCard(item, remembered, this.now()));
+    this.writeAll(all);
   }
 }
 

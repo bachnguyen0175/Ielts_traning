@@ -1,6 +1,7 @@
 import {
   LocalAttemptRepository,
   LocalProfileRepository,
+  LocalVocabRepository,
   MockContentRepository,
   memoryStorage,
   type StorageLike,
@@ -17,3 +18,4 @@ function storage(): StorageLike {
 export const contentRepo = new MockContentRepository();
 export const profileRepo = () => new LocalProfileRepository(storage());
 export const attemptRepo = () => new LocalAttemptRepository(storage());
+export const vocabRepo = () => new LocalVocabRepository(storage());

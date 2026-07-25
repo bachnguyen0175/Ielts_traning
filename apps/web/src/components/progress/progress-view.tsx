@@ -99,9 +99,12 @@ export function ProgressView({
         </ul>
       </div>
 
-      <div>
+      <div className="flex flex-wrap gap-3">
         <Button href="/mock" variant="accent" size="lg">
           Start a new mock
+        </Button>
+        <Button href="/vocab" variant="outline" size="lg">
+          Vocabulary
         </Button>
       </div>
     </div>
