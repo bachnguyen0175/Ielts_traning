@@ -7,15 +7,17 @@ __pycache__/
 *.so
 
 # Distribution / packaging
+# NOTE: generic names anchored to repo root (leading /) so they don't swallow
+# JS monorepo source like apps/web/src/lib/ (see below).
 .Python
-build/
+/build/
 develop-eggs/
-dist/
+/dist/
 downloads/
 eggs/
 .eggs/
-lib/
-lib64/
+/lib/
+/lib64/
 parts/
 sdist/
 var/
@@ -216,3 +218,31 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+
+.claude
+# ── Node / Next.js (appended) ──────────────────────────────
+# Non-anchored so they match at any depth (monorepo: apps/*, packages/*)
+node_modules/
+.pnp
+.pnp.*
+.next/
+out/
+build/
+next-env.d.ts
+*.tsbuildinfo
+.vercel
+.DS_Store
+*.pem
+npm-debug.log*
+.pnpm-debug.log*
+.env*
+# testing
+coverage/
+test-results/
+playwright-report/
+.playwright/
+
+# ── Ingested Cambridge content (private-study only; never commit copyrighted prose) ──
+apps/web/src/lib/content/ingested/*.data.json
+content/.ingested/

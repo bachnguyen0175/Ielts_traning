@@ -1,0 +1,15 @@
+{
+  "name": "ielts-training",
+  "version": "0.1.0",
+  "private": true,
+  "packageManager": "pnpm@10.16.1",
+  "description": "Composed — authentic IELTS Academic practice. Monorepo root.",
+  "scripts": {
+    "dev": "pnpm --filter web dev",
+    "build": "pnpm --filter web build",
+    "start": "pnpm --filter web start",
+    "lint": "pnpm --filter web lint",
+    "test": "pnpm -r test",
+    "test:e2e": "pnpm --filter web test:e2e"
+  }
+}
