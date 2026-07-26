@@ -12,7 +12,7 @@ export default function SignInPage() {
     <AuthShell heading="Sign in to Composed">
       <SignIn
         signUpUrl="/sign-up"
-        fallbackRedirectUrl="/progress"
+        fallbackRedirectUrl="/dashboard"
         appearance={{ elements: { headerTitle: "hidden", headerSubtitle: "hidden" } }}
       />
     </AuthShell>

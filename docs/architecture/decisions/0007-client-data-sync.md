@@ -24,8 +24,9 @@ actions.** Guests stay entirely local; signed-in users sync.
 - **User id:** server actions read Clerk's `userId` via `auth()`
   ([ADR-0002](./0002-auth-provider.md)); actions return null/false for guests so
   callers fall back to localStorage.
-- **Vocab / progress:** an async store/branch routes guest→localStorage vs
-  signed-in→actions behind the same shape.
+- **Vocab / profile:** an async store (`vocabStore`, `profileStore`) routes
+  guest→localStorage vs signed-in→actions behind the same shape. `/account` is
+  the edit surface for a signed-in profile, so profile edits now persist to Neon.
 - **Attempts (hot path):** the player keeps writing localStorage instantly. A
   **debounced write-through** (~1.5s, immediate flush on section boundary/finish)
   mirrors the attempt to Neon; on load a signed-in user **hydrates** localStorage
@@ -49,5 +50,5 @@ actions.** Guests stay entirely local; signed-in users sync.
 - Last-write-wins can lose an unsynced edit on another device within the debounce
   window (seconds) — acceptable; no per-field merge.
 - **Still deferred:** server-side scoring/answer-keys (fidelity rule — scoring is
-  still client-side); profile edits while already signed in still write local
-  (migration covers the initial import).
+  still client-side). *(Resolved: signed-in profile edits now persist to Neon via
+  `profileStore` + `/account`; no longer local-only.)*

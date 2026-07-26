@@ -12,7 +12,7 @@ export default function SignUpPage() {
     <AuthShell heading="Create your account">
       <SignUp
         signInUrl="/sign-in"
-        fallbackRedirectUrl="/progress"
+        fallbackRedirectUrl="/dashboard"
         appearance={{ elements: { headerTitle: "hidden", headerSubtitle: "hidden" } }}
       />
     </AuthShell>

@@ -14,7 +14,15 @@ export function AccountControl() {
   }
 
   return isSignedIn ? (
-    <UserButton />
+    <div className="flex items-center gap-4">
+      <Link
+        href="/dashboard"
+        className="text-sm font-medium text-foreground underline-offset-4 hover:underline"
+      >
+        Dashboard
+      </Link>
+      <UserButton />
+    </div>
   ) : (
     <Link
       href="/sign-in"

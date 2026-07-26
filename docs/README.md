@@ -39,6 +39,8 @@ concern; start here to navigate.
 
 **Full mock flow:** `/` → `/start` → `/tests` → `/mock?test=<id>` → `/mock/run`
 → `/mock/results` → `/mock/review` · `/progress` · `/vocab`.
+**Signed-in home:** `/dashboard` (next action + snapshot) · `/account` (edit
+target band / test date). Post-sign-in lands on `/dashboard`.
 
 ## Locked decisions (2026-07-25)
 
@@ -47,8 +49,11 @@ concern; start here to navigate.
 3. **Stack:** Next.js + Vercel + Vercel AI SDK
 4. **Scoring:** Deferred — objective auto-scoring for Listening/Reading in MVP;
    Writing/Speaking capture submissions for later (manual → AI) scoring
-5. **Launch mode:** **PRIVATE personal study tool** (not publicly distributed) —
-   permits Cambridge content ingestion for personal use; never distribute it.
+5. **Launch mode:** **Public product** *(2026-07-26 pivot from "private personal
+   tool")* — real users sign up. **Deployed content must be original or
+   licensed**; Cambridge material is **never** deployed. The Cambridge ingester
+   stays a **local-only dev aid** (gitignored output, never shipped). Public
+   launch needs a Clerk **production** instance.
    See [`../content/README.md`](../content/README.md).
 6. **Build strategy:** **mock-first FE** — every screen built against a
    localStorage repository seam ([ADR-0005](./architecture/decisions/0005-repo-structure.md),
