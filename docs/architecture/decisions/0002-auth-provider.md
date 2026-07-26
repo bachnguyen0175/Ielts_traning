@@ -1,50 +1,47 @@
 # ADR-0002: Auth provider
 
-> Status: Accepted (BE phase) — Auth.js (NextAuth v5) + magic-link email (Resend)
-> Date: 2026-07-25 (revised 2026-07-26)
+> Status: Accepted (BE phase) — Clerk
+> Date: 2026-07-25 (revised 2026-07-26: magic-link → Clerk)
 
 ## Context
 
-FE phase is live (guest-first, localStorage). Progress must now persist per user
-across devices, which needs authentication. Next.js App Router on Vercel,
-solo-maintained, private now but heading public. Google OAuth was the initial
-pick but the maintainer has **no access to Google Cloud Console**, so we chose an
-email-based method instead.
+Progress must persist per user across devices. The app is Next.js App Router on
+Vercel. Auth requirements evolved through the BE phase:
+- Google OAuth (first pick) — dropped: no Google Cloud Console access.
+- Auth.js v5 + Resend magic-link — shipped, but the email round-trip felt manual
+  and one-click social still needed a cloud console.
+- The maintainer chose **Clerk** for managed auth with one-click social **without
+  GCP** (Clerk's dev instances ship shared social credentials), email OTP, and
+  polished prebuilt UI.
 
 ## Decision
 
-**Auth.js (NextAuth v5)** with **magic-link email sign-in via the Resend
-provider**. Sessions persist in Neon Postgres via the **Auth.js Drizzle adapter**
-(database session strategy; see [ADR-0003](./0003-database.md)).
+**Clerk** (`@clerk/nextjs` v7) as the auth provider.
 
-- **Passwordless:** enter email → one-time link → signed in. No passwords to
-  store, reset, or rate-limit — less code and less security surface than
-  credentials.
-- **Guest-first preserved:** anonymous play still works; sign-in is optional and
-  unlocks cross-device persistence. On first sign-in, migrate the guest's
-  localStorage progress into their account (best-effort, one-time).
-- Email delivery via Resend (`AUTH_RESEND_KEY`). Test sender
-  `onboarding@resend.dev` needs no domain (delivers only to the account owner);
-  swap for a verified-domain sender before real users.
+- `clerkMiddleware()` in **`proxy.ts`** (Next 16 renamed `middleware`→`proxy`);
+  `ClerkProvider` in the root layout.
+- Clerk's `<SignIn/>`/`<SignUp/>` hosted inside our split-screen **AuthShell** at
+  `/sign-in` + `/sign-up`; `<UserButton/>` account control via a client
+  `AccountControl` (`useAuth`) so the landing / test-library stay static.
+- **User id = Clerk's `userId`** (a string). Server code reads it via
+  `auth()` from `@clerk/nextjs/server`; app tables key off it (no local user
+  table — see [ADR-0003](./0003-database.md)). Guest-first preserved.
 
 ## Alternatives considered
 
-- **Magic link + Resend (chosen)** — passwordless, secure, minimal code, keeps
-  the DB-session design; needs one easy Resend account (free, no domain to test).
-- **Google OAuth** — first choice, but **no Google Cloud Console access**. Dropped.
-- **Email + password (Credentials)** — zero external accounts, but we'd own
-  hashing/reset/rate-limiting, and it forces JWT sessions (drops DB sessions).
-  Rejected: more code, more security burden.
-- **GitHub OAuth** — trivial to create, but dev-centric; weak fit for students.
-- **Sign in with Vercel** — end users won't have Vercel accounts. Rejected.
+- **Clerk (chosen)** — managed, one-click social without GCP, email OTP, prebuilt
+  UI; trade-off: third-party vendor, MAU-based pricing (free tier generous),
+  identity lives off-platform.
+- **Auth.js + Resend magic-link** — shipped then replaced: passwordless but a
+  manual inbox round-trip; social still needed a cloud console.
+- **Google / GitHub OAuth direct** — Google blocked (no GCP); GitHub dev-centric.
 
 ## Consequences
 
-- Secrets: `AUTH_SECRET` (generated) + `AUTH_RESEND_KEY` (from Resend) in
-  `.env.local` and on Vercel. No Google credentials needed.
-- Uses the `verificationToken` + `session` adapter tables already migrated.
-- **Next.js 16** uses `proxy.ts` (not `middleware.ts`) for session keep-alive —
-  add later if needed.
-- More sign-in methods can be added later without re-architecting.
-- Implementation APIs (NextAuth v5, Resend provider, Drizzle adapter) grounded in
-  current docs at build time — memorized APIs are stale.
+- Secrets: `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` + `CLERK_SECRET_KEY` (+ sign-in/up
+  URL vars) in `.env.local` and on Vercel. No `AUTH_SECRET`/`AUTH_RESEND_KEY`.
+- Clerk verifies the secret on **every** request (handshake), so an invalid key
+  500s every page — keys must be correct in every environment.
+- Currently **development** Clerk keys (`pk_test`/`sk_test`) — fine for now; a
+  public launch needs a Clerk **production** instance (own domain).
+- Auth.js and its Drizzle adapter tables were removed.

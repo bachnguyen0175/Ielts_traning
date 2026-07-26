@@ -64,11 +64,10 @@ Auto-deploys on push to `main`. See [`deploy.md`](./deploy.md).
 **BE phase — Phases 1–3 done & live:**
 - **Database:** Neon Postgres + Drizzle ORM ([ADR-0003](./architecture/decisions/0003-database.md)).
   Schema (Auth.js tables + `profile`/`attempt`/`vocab`) migrated to Neon.
-- **Auth:** Auth.js v5 magic-link email via Resend, DB sessions
-  ([ADR-0002](./architecture/decisions/0002-auth-provider.md)). `/signin` works
-  in prod (verified: real sign-in → user + persisted session in Neon).
-  *Guest-first preserved.* Resend still test-mode (only emails the account owner
-  until a domain is verified).
+- **Auth:** **Clerk** (`@clerk/nextjs`) — one-click social + email OTP, hosted in
+  our split-screen sign-in shell ([ADR-0002](./architecture/decisions/0002-auth-provider.md)).
+  `proxy.ts` middleware; app tables key off Clerk's `userId`. *Guest-first
+  preserved.* Currently Clerk **dev** keys (prod instance needed for launch).
 - **Persistence & real-time sync** ([ADR-0007](./architecture/decisions/0007-client-data-sync.md)):
   signed-in users' vocab/attempts/progress mirror to Neon via auth-guarded server
   actions. Attempts hydrate on load (cross-device resume) + debounced

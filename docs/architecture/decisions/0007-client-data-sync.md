@@ -21,9 +21,9 @@ actions.** Guests stay entirely local; signed-in users sync.
   `userId` always comes from `auth()` server-side; every repo query is scoped by
   it (a client cannot act as another user). Repos live in `lib/db/repos.ts`
   (`server-only`).
-- **Session id:** a `session` callback surfaces `user.id` (database-session
-  strategy omits it by default); actions return null/false for guests so callers
-  fall back to localStorage.
+- **User id:** server actions read Clerk's `userId` via `auth()`
+  ([ADR-0002](./0002-auth-provider.md)); actions return null/false for guests so
+  callers fall back to localStorage.
 - **Vocab / progress:** an async store/branch routes guest→localStorage vs
   signed-in→actions behind the same shape.
 - **Attempts (hot path):** the player keeps writing localStorage instantly. A

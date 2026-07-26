@@ -27,14 +27,14 @@ Shared: `@composed/domain` (scorer, band conversion, timing) + `lib/data`
 repository seam + original sample mock content. **Verification:** ~60 unit/RTL
 tests + 17 E2E, build + lint green.
 
-**BE phase progress:** ✅ **auth** (Auth.js magic-link/Resend) + ✅ **database**
+**BE phase progress:** ✅ **auth** (Clerk — one-click social + email OTP) + ✅ **database**
 (Neon + Drizzle) + ✅ **Phase 3 persistence & real-time sync**
 ([ADR-0007](./architecture/decisions/0007-client-data-sync.md)) — signed-in
 users' vocab/attempts/progress mirror to Neon (server actions, attempt
 hydrate-on-load + debounced write-through, guest→account migration); guests stay
 local. All done & live in prod. **Still deferred:** server-side scoring (fidelity
-rule), AI band-scoring for W/S (RES-6/7, REV-6), live AI examiner (P3), Resend
-domain verification, licensed full-length content, analytics.
+rule), AI band-scoring for W/S (RES-6/7, REV-6), live AI examiner (P3), Clerk
+production instance (for launch), licensed full-length content, analytics.
 
 ## How to read this
 

@@ -40,6 +40,8 @@ runs on Vercel; auth ([ADR-0002](./0002-auth-provider.md)) needs the same DB.
 
 - Migration workflow via `drizzle-kit` (SQL migrations in the repo).
 - `DATABASE_URL` (Neon) required locally (`.env.local`) and on Vercel.
-- Same DB holds Auth.js tables + app tables, keyed off `users.id`.
+- Auth moved to Clerk ([ADR-0002](./0002-auth-provider.md)); the Auth.js adapter
+  tables were dropped. App tables now key off Clerk's `userId` string (no local
+  user/session tables).
 - Implementation APIs (Drizzle, Neon driver) grounded in current docs at build
   time — memorized APIs are stale.
