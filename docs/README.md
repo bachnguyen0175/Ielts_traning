@@ -54,22 +54,30 @@ concern; start here to navigate.
    localStorage repository seam ([ADR-0005](./architecture/decisions/0005-repo-structure.md),
    `@composed/domain`); real DB/auth/AI scoring deferred to the BE phase.
 
-## Current status (2026-07-25)
+## Current status (2026-07-26)
 
-**FE phase complete & verified** — the whole mock flow works end-to-end with mock
-data (~60 unit + ~18 E2E, build + lint green). See
-[`02-features.md` § Implementation status](./02-features.md).
+**FE phase complete & deployed** — the whole mock flow works end-to-end; **live
+on Vercel** at `ielts-traning-web-nhgz.vercel.app` (sample-only; Cambridge
+content never deployed, per [ADR-0006](./architecture/decisions/0006-content-ingestion.md)).
+Auto-deploys on push to `main`. See [`deploy.md`](./deploy.md).
 
-**Content ingestion (started):** a seed-anchored ingester
-([ADR-0006](./architecture/decisions/0006-content-ingestion.md),
-[`content/ingest/`](../content/ingest/README.md)) turns an
-`ieltstrainingonline.com` reading page into a playable `Test`; Cambridge 15
-Reading Test 1 is ingested and sittable. Output is gitignored (copyright).
+**BE phase — Phases 1–2 done & live:**
+- **Database:** Neon Postgres + Drizzle ORM ([ADR-0003](./architecture/decisions/0003-database.md)).
+  Schema (Auth.js tables + `profile`/`attempt`/`vocab`) migrated to Neon.
+- **Auth:** Auth.js v5 magic-link email via Resend, DB sessions
+  ([ADR-0002](./architecture/decisions/0002-auth-provider.md)). `/signin` works
+  in prod (verified: real sign-in → user + persisted session in Neon).
+  *Guest-first preserved.* Resend still test-mode (only emails the account owner
+  until a domain is verified).
 
-**Next:** BE phase (close [auth](./architecture/decisions/0002-auth-provider.md) +
-[database](./architecture/decisions/0003-database.md) ADRs, real persistence,
-AI scoring); ingestion follow-ups (MCQ-multi/option-list text, seed-free
-scaling).
+**Content ingestion:** seed-anchored ingester
+([ADR-0006](./architecture/decisions/0006-content-ingestion.md)); Cambridge 15
+Reading Test 1 sittable locally (gitignored, copyright).
+
+**Next — BE Phase 3:** swap the localStorage repositories for Drizzle-backed ones
+behind the same interfaces + guest→account migration (so progress persists to
+Neon). Then AI band-scoring for W/S. Ingestion follow-ups (MCQ-multi/option-list
+text, seed-free scaling).
 
 ## Status legend
 

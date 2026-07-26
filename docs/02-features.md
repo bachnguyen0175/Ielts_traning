@@ -27,9 +27,11 @@ Shared: `@composed/domain` (scorer, band conversion, timing) + `lib/data`
 repository seam + original sample mock content. **Verification:** ~60 unit/RTL
 tests + 17 E2E, build + lint green.
 
-**Deferred to BE phase:** real accounts/auth (ON-1 real), database (X-2), AI
-band-scoring for W/S (RES-6/7, REV-6), live AI examiner (P3), licensed
-full-length content, analytics.
+**BE phase progress:** ✅ **auth** (Auth.js magic-link/Resend) + ✅ **database**
+(Neon + Drizzle) done & live — schema migrated, sign-in verified in prod. ⏳
+**Phase 3 next:** DB-backed repositories + guest→account migration (progress
+persists to Neon). **Still deferred:** AI band-scoring for W/S (RES-6/7, REV-6),
+live AI examiner (P3), licensed full-length content, analytics.
 
 ## How to read this
 
