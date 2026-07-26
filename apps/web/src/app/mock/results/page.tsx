@@ -3,7 +3,7 @@ import { Suspense } from "react";
 import { auth } from "@/auth";
 import { Container } from "@/components/ui/container";
 import { Wordmark } from "@/components/landing/wordmark";
-import { AuthNav } from "@/components/auth/auth-nav";
+import { AccountMenu } from "@/components/auth/account-menu";
 import { ResultsClient } from "@/components/results/results-client";
 
 export const metadata: Metadata = {
@@ -18,7 +18,7 @@ export default async function ResultsPage() {
       <div className="border-b border-border/70">
         <Container className="flex h-16 items-center justify-between">
           <Wordmark />
-          <AuthNav />
+          <AccountMenu />
         </Container>
       </div>
       <Container className="w-full max-w-2xl flex-1 py-12">
