@@ -21,7 +21,14 @@ local CLI deploy could upload gitignored files from disk — don't.
 2. **Import** `bachnguyen0175/Ielts_traning`.
 3. Framework auto-detects **Next.js**. In the import screen set
    **Root Directory = `apps/web`** (see below).
-4. **Environment variables: none** (mock-first — no DB/auth/AI yet).
+4. **Environment variables** (BE phase — required for the app to run):
+   - `DATABASE_URL` (+ `DATABASE_URL_UNPOOLED`) — auto-injected by the Neon
+     Marketplace integration.
+   - `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`, `CLERK_SECRET_KEY`,
+     `NEXT_PUBLIC_CLERK_SIGN_IN_URL=/sign-in`, `NEXT_PUBLIC_CLERK_SIGN_UP_URL=/sign-up`
+     — Clerk keys (⚠️ Clerk verifies the secret on every request; an invalid one
+     500s every page). Set via `vercel env add … production` piped from
+     `.env.local`.
 5. **Deploy.** Pushes to `main` then auto-deploy.
 
 ## Config

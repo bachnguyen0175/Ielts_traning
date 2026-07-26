@@ -18,7 +18,8 @@ runs on Vercel; auth ([ADR-0002](./0002-auth-provider.md)) needs the same DB.
 - **Neon** — serverless Postgres, generous free tier, provisioned via the Vercel
   Marketplace integration (auto-injects the connection string env var).
 - **Drizzle** — lightweight, type-safe, serverless/edge-friendly, first-class
-  Neon HTTP driver, and an official Auth.js adapter. SQL migrations checked in.
+  Neon HTTP driver. SQL migrations checked in. (Originally also chosen for its
+  Auth.js adapter; auth later moved to Clerk — see [ADR-0002](./0002-auth-provider.md).)
 - **Repository seam unchanged:** implement `ProfileRepository`,
   `AttemptRepository`, `VocabRepository` against Drizzle behind the existing
   interfaces — screens don't change.
@@ -30,11 +31,10 @@ runs on Vercel; auth ([ADR-0002](./0002-auth-provider.md)) needs the same DB.
 
 ## Alternatives considered
 
-- **Neon + Drizzle (chosen)** — serverless fit, type-safety, Auth.js adapter,
-  minimal runtime.
+- **Neon + Drizzle (chosen)** — serverless fit, type-safety, minimal runtime.
 - **Prisma** — heavier client/engine, less edge-friendly; rejected for Drizzle.
-- **Supabase Postgres** — fine, but we chose open-source Auth.js over Supabase
-  Auth, so no need for the bundle.
+- **Supabase Postgres** — fine, but auth went to Clerk
+  ([ADR-0002](./0002-auth-provider.md)), so no need for Supabase's bundle.
 
 ## Consequences
 

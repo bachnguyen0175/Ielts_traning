@@ -63,7 +63,7 @@ Auto-deploys on push to `main`. See [`deploy.md`](./deploy.md).
 
 **BE phase — Phases 1–3 done & live:**
 - **Database:** Neon Postgres + Drizzle ORM ([ADR-0003](./architecture/decisions/0003-database.md)).
-  Schema (Auth.js tables + `profile`/`attempt`/`vocab`) migrated to Neon.
+  Schema (`profile`/`attempt`/`vocab`, keyed off Clerk's `userId`) migrated to Neon.
 - **Auth:** **Clerk** (`@clerk/nextjs`) — one-click social + email OTP, hosted in
   our split-screen sign-in shell ([ADR-0002](./architecture/decisions/0002-auth-provider.md)).
   `proxy.ts` middleware; app tables key off Clerk's `userId`. *Guest-first
@@ -78,7 +78,7 @@ Auto-deploys on push to `main`. See [`deploy.md`](./deploy.md).
 Reading Test 1 sittable locally (gitignored, copyright).
 
 **Next:** server-side scoring/answer-keys (deferred fidelity rule), AI
-band-scoring for W/S, Resend domain verification (any-email sign-in), ingestion
+band-scoring for W/S, Clerk **production** instance (for public launch), ingestion
 follow-ups (MCQ-multi/option-list text, seed-free scaling).
 
 ## Status legend
