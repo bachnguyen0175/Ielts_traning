@@ -41,11 +41,45 @@ Stdlib only (no dependencies). After running, `pnpm dev` shows the test in
   inline answer key, and explanations (justifying sentence `<strong>`-wrapped,
   tagged `(Qn)`).
 
+## `ingest_auto.py` — seed-FREE ingester (scales past one seed)
+
+`ingest_auto.py` derives the **whole** `Test` — passages, question types **and
+answer keys** — from a source page with **no hand-authored seed**, so a whole
+volume can be ingested. It auto-detects two page layouts:
+
+- **answers-inline** (cam15-style `…-answers-with-explanations` pages): answers
+  are `<strong>`-bold right after each question number.
+- **passages + answer-key list** (cam14-style pages): a plain
+  `Passage 1  1. creativity  2. rules … Passage 2  14. E …` key at the bottom;
+  parsed by `answer_key()` and applied over the parsed structure.
+
+Robust to real-world mess it met across cam14/15: split `NOT GIVEN` tags,
+bullet-prefixed numbers (`● 12`), `<b>`/styled `<strong>`, **overlapping range
+typos** (earliest-header-wins), **missing group headers** (uncovered numbers →
+implicit groups), and **duplicate numbers** (rubric "write 40 on your answer
+sheet" vs. the real Q40). Classifies the four `answerMatch` kinds
+(text / enum TFNG+YNNG / letter / letter-set).
+
+```bash
+python3 content/ingest/ingest_auto.py --volume 14 --test 1 --html cam14_test1.html --write
+# validate the extractor against the trusted seed (must stay 40/40):
+python3 content/ingest/ingest_auto.py --volume 15 --test 1 --html page.html \
+  --validate content/seeds/cambridge15-academic-test1.reading.json
+```
+
+- **Self-reports coverage** and (in batch use) **refuses to wire a test with
+  gaps** — no silently-wrong tests.
+- Validated **40/40** against the cam15 test-1 seed; ingested cam15 T1–4 + cam14 T1
+  locally (all sittable + auto-scored).
+- Dropped-in source pages (`cam*_test*.html`, `*.source.html`) are **gitignored**
+  (they hold copyrighted passages + keys). Output data.json stays gitignored and
+  `index.ts` skip-worktree'd, exactly as with `ingest.py`.
+
 ## Known gaps (follow-ups)
 
-- **MCQ-multi ("choose TWO", e.g. Q23–26)** option/stem text isn't extracted yet
-  (scoring still works via the seed's letter-set keys).
 - MCQ-single / matching **option-list text** (the A–E choices) isn't captured —
   those questions render by letter only for now.
-- Currently **seed-driven**: each test needs a seed skeleton for its answer keys.
-  Seed-free parsing of every question type is the path to scaling past one test.
+- **Other volumes/templates:** cam15 (answers-inline) and cam14 (passages+key)
+  work; some volumes 404 or use a third layout, and the older
+  `answers-and-explanations-for-…` pages have **no passage prose** (not sittable).
+  Each new template is a small per-format adaptation.

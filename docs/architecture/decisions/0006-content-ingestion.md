@@ -63,6 +63,18 @@ Cambridge is playable locally, absent from git and from any deployment.
 - Verified on Cambridge 15 Test 1: 3 passages of clean prose (892/800/928 words),
   36/40 question stems, 40/40 keys (crawler agrees with the seed on 38; the 2
   diffs are formatting artifacts). Sat end-to-end to a reading band.
-- **Follow-ups:** MCQ-multi (Q23–26) and MCQ/matching **option-list text** aren't
-  extracted yet (scoring unaffected); ingestion is currently seed-driven, so
-  scaling past one test needs seed-free parsing of every question type.
+- **Seed-free ingester added (2026-07-27):** `content/ingest/ingest_auto.py`
+  derives structure + types + **answer keys** from a page with no seed, auto-
+  detecting two layouts (answers-inline / passages+answer-key-list). Validated
+  40/40 against the cam15 seed; ingested cam15 T1–4 + cam14 T1 locally. It
+  self-reports coverage and refuses to wire a test with gaps. Same guard: output
+  gitignored, `index.ts` skip-worktree'd, dropped-in source pages gitignored
+  (`cam*_test*.html`). See [`../../../content/ingest/README.md`](../../../content/ingest/README.md).
+- **Posture note (2026-07-26 pivot):** decision #5 changed from "private tool" to
+  **public product**. The gitignore/skip-worktree guard here is therefore now a
+  **permanent product rule** — Cambridge content is a local dev aid only and is
+  **never** deployed. Publishing it publicly was requested and **firmly declined**
+  (copyright); a public launch needs original or licensed content.
+- **Follow-ups:** MCQ/matching **option-list text** (the A–E choices) still not
+  extracted (scoring unaffected); some volumes use other page templates (or lack
+  passage prose), each a small per-format adaptation.
