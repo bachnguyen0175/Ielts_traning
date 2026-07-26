@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
+import { auth } from "@/auth";
 import { RunClient } from "@/components/player/run-client";
 
 export const metadata: Metadata = {
@@ -7,7 +8,8 @@ export const metadata: Metadata = {
   description: "Sit your mock under real conditions.",
 };
 
-export default function RunPage() {
+export default async function RunPage() {
+  const session = await auth();
   return (
     <Suspense
       fallback={
@@ -16,7 +18,7 @@ export default function RunPage() {
         </main>
       }
     >
-      <RunClient />
+      <RunClient userId={session?.user?.id ?? null} />
     </Suspense>
   );
 }

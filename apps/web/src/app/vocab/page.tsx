@@ -3,6 +3,7 @@ import { auth } from "@/auth";
 import { Container } from "@/components/ui/container";
 import { Wordmark } from "@/components/landing/wordmark";
 import { AuthNav } from "@/components/auth/auth-nav";
+import { MigrateLocalData } from "@/components/auth/migrate-local-data";
 import { VocabClient } from "@/components/vocab/vocab-client";
 
 export const metadata: Metadata = {
@@ -31,6 +32,7 @@ export default async function VocabPage() {
             : " Sign in to sync across devices."}
         </p>
         <VocabClient userId={session?.user?.id ?? null} />
+        {session?.user?.id && <MigrateLocalData userId={session.user.id} />}
       </Container>
     </main>
   );

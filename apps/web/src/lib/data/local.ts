@@ -184,6 +184,14 @@ export class LocalAttemptRepository implements AttemptRepository {
     return this.readAll();
   }
 
+  put(attempt: Attempt): void {
+    const all = this.readAll();
+    const i = all.findIndex((a) => a.id === attempt.id);
+    if (i >= 0) all[i] = attempt;
+    else all.push(attempt);
+    this.writeAll(all);
+  }
+
   saveResponse(id: string, questionNumber: number, value: string): void {
     this.mutate(id, (a) => {
       a.responses[questionNumber] = value;

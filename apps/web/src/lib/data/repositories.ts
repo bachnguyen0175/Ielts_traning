@@ -66,6 +66,8 @@ export interface AttemptRepository {
   create(testId: string): Attempt;
   get(id: string): Attempt | undefined;
   list(): Attempt[];
+  /** replace/insert a whole attempt (used to hydrate from the DB on resume) */
+  put(attempt: Attempt): void;
   saveResponse(id: string, questionNumber: number, value: string): void;
   toggleFlag(id: string, questionNumber: number): void;
   startSection(id: string, sectionId: string): void;

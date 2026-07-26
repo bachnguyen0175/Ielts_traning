@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
+import { auth } from "@/auth";
 import { Container } from "@/components/ui/container";
 import { Wordmark } from "@/components/landing/wordmark";
+import { AuthNav } from "@/components/auth/auth-nav";
 import { ResultsClient } from "@/components/results/results-client";
 
 export const metadata: Metadata = {
@@ -9,12 +11,14 @@ export const metadata: Metadata = {
   description: "See how you did on your mock.",
 };
 
-export default function ResultsPage() {
+export default async function ResultsPage() {
+  const session = await auth();
   return (
     <main className="flex min-h-dvh flex-col">
       <div className="border-b border-border/70">
-        <Container className="flex h-16 items-center">
+        <Container className="flex h-16 items-center justify-between">
           <Wordmark />
+          <AuthNav />
         </Container>
       </div>
       <Container className="w-full max-w-2xl flex-1 py-12">
@@ -28,7 +32,7 @@ export default function ResultsPage() {
             </p>
           }
         >
-          <ResultsClient />
+          <ResultsClient userId={session?.user?.id ?? null} />
         </Suspense>
       </Container>
     </main>
