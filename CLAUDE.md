@@ -22,8 +22,10 @@ implementing — it's the source of truth.
 - **Build strategy:** **mock-first FE** — screens depend on a localStorage
   repository seam (`apps/web/src/lib/data`), pure logic lives in
   `packages/@composed/domain`. Real DB/auth/AI scoring are the **BE phase**.
-- **Launch mode:** **PRIVATE personal study tool** (never publicly distributed) —
-  permits personal Cambridge content ingestion; do **not** commit/ship Cambridge
+- **Launch mode:** **PUBLIC product** *(2026-07-26 pivot from "private personal
+  tool")* — real users sign up. **Deployed content must be original or licensed;
+  Cambridge material is NEVER deployed.** The Cambridge ingester stays a
+  local-only dev aid (gitignored output). Do **not** commit/ship Cambridge
   passages or question wording (copyright). See [`content/README.md`](./content/README.md).
 - **Status:** FE phase complete & verified; flow `/ → /start → /tests →
   /mock?test=<id> → /mock/run → /mock/results → /mock/review · /progress`.

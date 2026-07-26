@@ -3,16 +3,21 @@
 Test content for the platform, structured per
 [`../docs/architecture/data-model.md`](../docs/architecture/data-model.md).
 
-## Posture: PRIVATE study tool (2026-07-25)
+## Posture: PUBLIC product (2026-07-26 pivot)
 
-Composed is a **private, personal** IELTS practice tool — **not** publicly
-distributed. On that basis, ingesting official **Cambridge IELTS** content
-(Cambridge 10–21) for the user's own practice is acceptable.
+Composed is now intended as a **public product** other people sign up for
+(revised from the original "private personal tool"). That makes the copyright
+line **binding, not aspirational**:
 
-> ⚠️ **Never publish or distribute Cambridge content.** Cambridge IELTS material
-> is copyrighted and actively enforced. If this product is ever made public,
-> all Cambridge-derived content must be removed and replaced with original or
-> licensed material. Keep the non-affiliation disclaimer regardless.
+> ⚠️ **Deployed content must be original or licensed. Cambridge material is
+> NEVER deployed.** Cambridge IELTS content (10–21) is copyrighted and actively
+> enforced; a public product cannot ship it without a licence. Keep the
+> non-affiliation disclaimer regardless.
+
+The Cambridge **ingester below stays as a local-only dev aid** — its output is
+gitignored and never reaches a deployment (the same guard, now a permanent
+product rule). Treat any local Cambridge ingestion as the maintainer's own
+personal study use, at their responsibility — it must not feed the public build.
 
 ## `seeds/`
 
