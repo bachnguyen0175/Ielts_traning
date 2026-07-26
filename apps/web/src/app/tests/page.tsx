@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Container } from "@/components/ui/container";
 import { Wordmark } from "@/components/landing/wordmark";
-import { AccountMenu } from "@/components/auth/account-menu";
+import { AccountControl } from "@/components/auth/account-control";
 import { contentRepo } from "@/lib/data/client";
 import { TestCatalog } from "@/components/tests/test-catalog";
 
@@ -17,7 +17,7 @@ export default function TestsPage() {
       <div className="border-b border-border/70">
         <Container className="flex h-16 items-center justify-between">
           <Wordmark />
-          <AccountMenu />
+          <AccountControl />
         </Container>
       </div>
       <Container className="w-full max-w-3xl flex-1 py-12">

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
-import { auth } from "@/auth";
+import { auth } from "@clerk/nextjs/server";
 import { RunClient } from "@/components/player/run-client";
 
 export const metadata: Metadata = {
@@ -9,7 +9,7 @@ export const metadata: Metadata = {
 };
 
 export default async function RunPage() {
-  const session = await auth();
+  const { userId } = await auth();
   return (
     <Suspense
       fallback={
@@ -18,7 +18,7 @@ export default async function RunPage() {
         </main>
       }
     >
-      <RunClient userId={session?.user?.id ?? null} />
+      <RunClient userId={userId} />
     </Suspense>
   );
 }

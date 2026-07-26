@@ -8,6 +8,13 @@
       "when": 1785003607392,
       "tag": "0000_overrated_black_bolt",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1785043242404,
+      "tag": "0001_fantastic_stone_men",
+      "breakpoints": true
     }
   ]
 }

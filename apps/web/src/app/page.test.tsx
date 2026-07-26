@@ -1,12 +1,12 @@
 import { render, screen, within } from "@testing-library/react";
 import { describe, it, expect, vi } from "vitest";
 
-// AccountMenu (in the header) uses useSession; its provider lives in the layout,
-// not in this isolated page render — stub the client auth hooks.
-vi.mock("next-auth/react", () => ({
-  useSession: () => ({ data: null, status: "unauthenticated" }),
-  signOut: vi.fn(),
-  SessionProvider: ({ children }: { children: React.ReactNode }) => children,
+// AccountControl (in the header) uses Clerk's <SignedIn>/<SignedOut>/<UserButton>,
+// whose provider lives in the layout, not this isolated page render — stub them.
+vi.mock("@clerk/nextjs", () => ({
+  useAuth: () => ({ isLoaded: true, isSignedIn: false }),
+  UserButton: () => null,
+  ClerkProvider: ({ children }: { children: React.ReactNode }) => children,
 }));
 
 import Page from "./page";

@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
-import { auth } from "@/auth";
+import { auth } from "@clerk/nextjs/server";
 import { Container } from "@/components/ui/container";
 import { Wordmark } from "@/components/landing/wordmark";
-import { AccountMenu } from "@/components/auth/account-menu";
+import { AccountControl } from "@/components/auth/account-control";
 import { MigrateLocalData } from "@/components/auth/migrate-local-data";
 import { VocabClient } from "@/components/vocab/vocab-client";
 
@@ -12,13 +12,13 @@ export const metadata: Metadata = {
 };
 
 export default async function VocabPage() {
-  const session = await auth();
+  const { userId } = await auth();
   return (
     <main className="flex min-h-dvh flex-col">
       <div className="border-b border-border/70">
         <Container className="flex h-16 items-center justify-between">
           <Wordmark />
-          <AccountMenu />
+          <AccountControl />
         </Container>
       </div>
       <Container className="w-full max-w-2xl flex-1 py-12">
@@ -27,12 +27,12 @@ export default async function VocabPage() {
         </h1>
         <p className="mb-8 text-sm text-muted-foreground">
           Words you save from your tests — study them as flashcards.
-          {session?.user
+          {userId
             ? " Synced to your account."
             : " Sign in to sync across devices."}
         </p>
-        <VocabClient userId={session?.user?.id ?? null} />
-        {session?.user?.id && <MigrateLocalData userId={session.user.id} />}
+        <VocabClient userId={userId} />
+        {userId && <MigrateLocalData userId={userId} />}
       </Container>
     </main>
   );

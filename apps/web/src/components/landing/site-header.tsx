@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Container } from "@/components/ui/container";
-import { AccountMenu } from "@/components/auth/account-menu";
+import { AccountControl } from "@/components/auth/account-control";
 import { Wordmark } from "./wordmark";
 
 export function SiteHeader() {
@@ -21,7 +21,7 @@ export function SiteHeader() {
           >
             The skills
           </a>
-          <AccountMenu />
+          <AccountControl />
           <Button href="/start" variant="accent" size="md">
             Start a free mock
           </Button>

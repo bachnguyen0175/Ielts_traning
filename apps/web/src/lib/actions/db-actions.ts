@@ -1,18 +1,18 @@
 "use server";
 
-import { auth } from "@/auth";
+import { auth } from "@clerk/nextjs/server";
 import * as repos from "@/lib/db/repos";
 import type { Attempt } from "@composed/domain";
 import type { Profile, VocabItem } from "@/lib/data/repositories";
 
 // Server actions = the boundary the client uses to reach the DB. The user id is
-// ALWAYS taken from the session server-side (never from the client), and every
-// repo query is scoped by it — a signed-in user can only touch their own data.
+// ALWAYS taken from Clerk server-side (never from the client), and every repo
+// query is scoped by it — a signed-in user can only touch their own data.
 // Each returns null/false for guests so callers fall back to localStorage.
 
 async function currentUserId(): Promise<string | null> {
-  const session = await auth();
-  return session?.user?.id ?? null;
+  const { userId } = await auth();
+  return userId;
 }
 
 // ── Profile ──
