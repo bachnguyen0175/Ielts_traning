@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { Container } from "@/components/ui/container";
 import { Wordmark } from "@/components/landing/wordmark";
 import { contentRepo } from "@/lib/data/client";
@@ -14,8 +15,14 @@ export default function TestsPage() {
   return (
     <main className="flex min-h-dvh flex-col">
       <div className="border-b border-border/70">
-        <Container className="flex h-16 items-center">
+        <Container className="flex h-16 items-center justify-between">
           <Wordmark />
+          <Link
+            href="/signin"
+            className="text-sm font-medium text-primary underline-offset-4 hover:underline"
+          >
+            Sign in
+          </Link>
         </Container>
       </div>
       <Container className="w-full max-w-3xl flex-1 py-12">

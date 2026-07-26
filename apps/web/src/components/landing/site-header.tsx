@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Container } from "@/components/ui/container";
 import { Wordmark } from "./wordmark";
@@ -20,6 +21,12 @@ export function SiteHeader() {
           >
             The skills
           </a>
+          <Link
+            href="/signin"
+            className="rounded-full px-4 py-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
+          >
+            Sign in
+          </Link>
           <Button href="/start" variant="accent" size="md">
             Start a free mock
           </Button>
