@@ -61,7 +61,7 @@ on Vercel** at `ielts-traning-web-nhgz.vercel.app` (sample-only; Cambridge
 content never deployed, per [ADR-0006](./architecture/decisions/0006-content-ingestion.md)).
 Auto-deploys on push to `main`. See [`deploy.md`](./deploy.md).
 
-**BE phase — Phases 1–2 done & live:**
+**BE phase — Phases 1–3 done & live:**
 - **Database:** Neon Postgres + Drizzle ORM ([ADR-0003](./architecture/decisions/0003-database.md)).
   Schema (Auth.js tables + `profile`/`attempt`/`vocab`) migrated to Neon.
 - **Auth:** Auth.js v5 magic-link email via Resend, DB sessions
@@ -69,15 +69,18 @@ Auto-deploys on push to `main`. See [`deploy.md`](./deploy.md).
   in prod (verified: real sign-in → user + persisted session in Neon).
   *Guest-first preserved.* Resend still test-mode (only emails the account owner
   until a domain is verified).
+- **Persistence & real-time sync** ([ADR-0007](./architecture/decisions/0007-client-data-sync.md)):
+  signed-in users' vocab/attempts/progress mirror to Neon via auth-guarded server
+  actions. Attempts hydrate on load (cross-device resume) + debounced
+  write-through; guest→account migration on first sign-in. Guests stay local.
 
 **Content ingestion:** seed-anchored ingester
 ([ADR-0006](./architecture/decisions/0006-content-ingestion.md)); Cambridge 15
 Reading Test 1 sittable locally (gitignored, copyright).
 
-**Next — BE Phase 3:** swap the localStorage repositories for Drizzle-backed ones
-behind the same interfaces + guest→account migration (so progress persists to
-Neon). Then AI band-scoring for W/S. Ingestion follow-ups (MCQ-multi/option-list
-text, seed-free scaling).
+**Next:** server-side scoring/answer-keys (deferred fidelity rule), AI
+band-scoring for W/S, Resend domain verification (any-email sign-in), ingestion
+follow-ups (MCQ-multi/option-list text, seed-free scaling).
 
 ## Status legend
 

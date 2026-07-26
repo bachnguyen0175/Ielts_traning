@@ -19,3 +19,4 @@ an ADR — supersede it with a new one and mark the old as `Superseded`.
 | [0004](./0004-attempt-resumability.md) | Attempt resumability | Accepted (resume w/ elapsed-time) |
 | [0005](./0005-repo-structure.md) | Repo structure — pnpm-workspace monorepo (`apps/web`) | Accepted |
 | [0006](./0006-content-ingestion.md) | Cambridge content ingestion (seed-anchored, gitignored output) | Accepted |
+| [0007](./0007-client-data-sync.md) | Client persistence & real-time sync (localStorage + server-action write-through) | Accepted |
