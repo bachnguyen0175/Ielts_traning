@@ -246,6 +246,11 @@ playwright-report/
 # ── Ingested Cambridge content (private-study only; never commit copyrighted prose) ──
 apps/web/src/lib/content/ingested/*.data.json
 content/.ingested/
+# Raw source pages dropped in for local ingestion (passages + keys = copyrighted)
+cam*_test*.html
+cam*t*.html
+*.source.html
+content/ingest/sources/
 # Added by code-review-graph
 .code-review-graph/
 # Local MCP config — machine-specific (absolute cwd); keep out of git
