@@ -2,46 +2,46 @@
 
 import { useEffect, useMemo, useState } from "react";
 import type { VocabItem } from "@/lib/data/repositories";
-import { vocabRepo } from "@/lib/data/client";
+import { vocabStore } from "@/lib/data/vocab-store";
 import { EXAMPLE_VOCAB } from "@/lib/content/example-vocab";
 import { MAX_BOX } from "@/lib/srs";
 import { Button } from "@/components/ui/button";
 import { FlashcardDeck } from "./flashcard-deck";
 
-export function VocabClient() {
-  const repo = useMemo(() => vocabRepo(), []);
+export function VocabClient({ userId }: { userId: string | null }) {
+  const store = useMemo(() => vocabStore(userId), [userId]);
   const [items, setItems] = useState<VocabItem[] | null>(null);
   const [studying, setStudying] = useState(false);
   const [term, setTerm] = useState("");
   const [definition, setDefinition] = useState("");
 
-  const refresh = () => setItems(repo.list());
+  const refresh = async () => setItems(await store.list());
 
   useEffect(() => {
     let cancelled = false;
-    Promise.resolve().then(() => {
-      if (!cancelled) setItems(repo.list());
+    store.list().then((v) => {
+      if (!cancelled) setItems(v);
     });
     return () => {
       cancelled = true;
     };
-  }, [repo]);
+  }, [store]);
 
   if (items === null) {
     return <p className="py-24 text-center text-muted-foreground">Loading…</p>;
   }
 
-  function addWord(e: React.FormEvent) {
+  async function addWord(e: React.FormEvent) {
     e.preventDefault();
-    if (!repo.add({ term, definition })) return;
+    if (!(await store.add({ term, definition }))) return;
     setTerm("");
     setDefinition("");
-    refresh();
+    await refresh();
   }
 
-  function loadExamples() {
-    for (const w of EXAMPLE_VOCAB) repo.add(w);
-    refresh();
+  async function loadExamples() {
+    for (const w of EXAMPLE_VOCAB) await store.add(w);
+    await refresh();
   }
 
   if (studying && items.length > 0) {
@@ -50,7 +50,7 @@ export function VocabClient() {
         <button
           onClick={() => {
             setStudying(false);
-            refresh();
+            void refresh();
           }}
           className="text-sm text-muted-foreground underline-offset-4 hover:underline"
         >
@@ -58,7 +58,7 @@ export function VocabClient() {
         </button>
         <FlashcardDeck
           items={items}
-          onGrade={(item, remembered) => repo.review(item.id, remembered)}
+          onGrade={(item, remembered) => void store.review(item, remembered)}
         />
       </div>
     );
@@ -135,9 +135,9 @@ export function VocabClient() {
                 </span>
                 <button
                   aria-label={`Remove ${it.term}`}
-                  onClick={() => {
-                    repo.remove(it.id);
-                    refresh();
+                  onClick={async () => {
+                    await store.remove(it.id);
+                    await refresh();
                   }}
                   className="shrink-0 text-muted-foreground hover:text-foreground"
                 >

@@ -14,7 +14,7 @@ interface Loaded {
   audioUrls: Record<string, string>;
 }
 
-export function ReviewClient() {
+export function ReviewClient({ userId }: { userId: string | null }) {
   const router = useRouter();
   const params = useSearchParams();
   const attemptId = params.get("a");
@@ -56,7 +56,7 @@ export function ReviewClient() {
         submissions={loaded.submissions}
         audioUrls={loaded.audioUrls}
       />
-      <VocabCapture source={loaded.test.title} />
+      <VocabCapture source={loaded.test.title} userId={userId} />
     </div>
   );
 }

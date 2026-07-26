@@ -19,6 +19,14 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     verificationTokensTable: verificationTokens,
   }),
   session: { strategy: "database" },
+  callbacks: {
+    // Database-session strategy doesn't expose user.id on the session by
+    // default; our server actions scope every query by it, so surface it here.
+    session({ session, user }) {
+      if (session.user && user) session.user.id = user.id;
+      return session;
+    },
+  },
   // Send auth errors + the "check your email" step to our own /signin page
   // instead of Auth.js's default routes (which render a bare 500 in App Router).
   pages: { error: "/signin", verifyRequest: "/signin/check" },

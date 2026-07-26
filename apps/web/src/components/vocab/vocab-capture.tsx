@@ -1,22 +1,29 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
-import { vocabRepo } from "@/lib/data/client";
+import { vocabStore } from "@/lib/data/vocab-store";
 import { Button } from "@/components/ui/button";
 
 /**
  * Post-test vocabulary capture (REV-7): shown on Review so candidates can save
- * words they met in the test they just sat. Saves to the VocabRepository seam
- * with the test title as the source; studied later on /vocab.
+ * words they met in the test they just sat. Routes through the vocab store —
+ * guests → localStorage, signed-in → Neon — with the test title as the source.
  */
-export function VocabCapture({ source }: { source?: string }) {
+export function VocabCapture({
+  source,
+  userId,
+}: {
+  source?: string;
+  userId: string | null;
+}) {
+  const store = useMemo(() => vocabStore(userId), [userId]);
   const [term, setTerm] = useState("");
   const [count, setCount] = useState(0);
 
-  function save(e: React.FormEvent) {
+  async function save(e: React.FormEvent) {
     e.preventDefault();
-    if (!vocabRepo().add({ term, source })) return;
+    if (!(await store.add({ term, source }))) return;
     setTerm("");
     setCount((n) => n + 1);
   }
