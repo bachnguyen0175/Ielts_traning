@@ -220,7 +220,11 @@ __marimo__/
 .streamlit/secrets.toml
 
 
-.claude
+# Claude Code: share hooks + skills with the team, keep per-machine state out.
+.claude/settings.local.json
+.claude/**/__pycache__/
+.claude/**/*.pyc
+
 # ── Node / Next.js (appended) ──────────────────────────────
 # Non-anchored so they match at any depth (monorepo: apps/*, packages/*)
 node_modules/
