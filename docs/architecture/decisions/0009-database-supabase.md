@@ -55,15 +55,20 @@ own database.
 
 ## Consequences
 
-**The code does not work until these land.** Migration checklist:
+Migration checklist:
 
-| # | Change | File |
-|---|---|---|
-| 1 | Swap driver: `drizzle-orm/neon-http` → `drizzle-orm/postgres-js` | `apps/web/src/lib/db/index.ts` |
-| 2 | Drop `@neondatabase/serverless`, add `postgres` | `apps/web/package.json` |
-| 3 | Point migrations at the **direct** connection, not the transaction pooler | `apps/web/drizzle.config.ts` |
-| 4 | Set `DATABASE_URL` / `DATABASE_URL_UNPOOLED` on Vercel by hand | Vercel env |
-| 5 | Migrate existing `profile` / `attempt` / `vocab` rows, if any exist on Neon | — |
+| # | Change | File | Status |
+|---|---|---|---|
+| 1 | Swap driver: `drizzle-orm/neon-http` → `drizzle-orm/postgres-js` | `apps/web/src/lib/db/index.ts` | ✅ done 2026-08-13 |
+| 2 | Drop `@neondatabase/serverless`, add `postgres` | `apps/web/package.json` | ✅ done 2026-08-13 |
+| 3 | Point migrations at the **direct** connection, not the transaction pooler | `apps/web/drizzle.config.ts` | ✅ already correct (`DATABASE_URL_UNPOOLED`); comment updated |
+| 4 | Set `DATABASE_URL` / `DATABASE_URL_UNPOOLED` on Vercel by hand | Vercel env | ⬜ outstanding |
+| 5 | Migrate existing `profile` / `attempt` / `vocab` rows, if any exist on Neon | — | ⬜ outstanding |
+
+Items 1–3 are verified only by build and test — 82 app tests + 26 domain tests
+pass, `next build` succeeds, lint clean. **No connection to a real Supabase
+instance has been made**, because no `.env*` exists locally. The first genuine
+verification is item 4.
 
 Connection-mode notes that will bite if missed:
 

@@ -71,8 +71,10 @@ Auto-deploys on push to `main`. See [`deploy.md`](./deploy.md).
 - **Database:** **Supabase** Postgres + Drizzle ORM ([ADR-0009](./architecture/decisions/0009-database-supabase.md),
   superseding [ADR-0003](./architecture/decisions/0003-database.md)).
   Schema (`profile`/`attempt`/`vocab`, keyed off Clerk's `userId`) unchanged.
-  ⚠️ **The driver swap is outstanding** — `lib/db/index.ts` still uses Neon's
-  HTTP driver, which cannot reach Supabase. See ADR-0009's migration checklist.
+  Driver swapped to `postgres-js` (`prepare: false` for the transaction pooler).
+  ⚠️ **Vercel env vars still point at Neon** — set `DATABASE_URL` /
+  `DATABASE_URL_UNPOOLED` to the Supabase strings, and migrate any existing rows.
+  See ADR-0009's migration checklist.
 - **Auth:** **Clerk** (`@clerk/nextjs`) — one-click social + email OTP, hosted in
   our split-screen sign-in shell ([ADR-0002](./architecture/decisions/0002-auth-provider.md)).
   `proxy.ts` middleware; app tables key off Clerk's `userId`. *Guest-first
