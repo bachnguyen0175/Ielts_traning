@@ -3,13 +3,17 @@
 import { useState } from "react";
 import type { Profile } from "@/lib/data/repositories";
 import { Button } from "@/components/ui/button";
+import { Field, FieldInput, FieldSelect } from "@/components/ui/field";
+import { TargetIcon, CalendarIcon } from "@/components/ui/icons";
 
 const BANDS = [4, 4.5, 5, 5.5, 6, 6.5, 7, 7.5, 8, 8.5, 9];
 
-const fieldClass =
-  "w-full rounded-xl border border-border bg-card px-4 py-3 text-foreground " +
-  "shadow-sm outline-none transition-colors focus-visible:border-ring " +
-  "focus-visible:ring-2 focus-visible:ring-ring/40";
+/** Today in the browser's own timezone — `toISOString()` would shift the date. */
+function today(): string {
+  const d = new Date();
+  const local = new Date(d.getTime() - d.getTimezoneOffset() * 60_000);
+  return local.toISOString().slice(0, 10);
+}
 
 export function OnboardingForm({
   onStart,
@@ -32,61 +36,55 @@ export function OnboardingForm({
         e.preventDefault();
         start();
       }}
-      className="space-y-6"
+      className="space-y-7"
       noValidate
     >
-      <div className="space-y-2">
-        <label
-          htmlFor="target-band"
-          className="block text-sm font-medium text-foreground"
+      <div className="flex gap-4">
+        <span className="mt-0.5 hidden h-10 w-10 shrink-0 place-items-center rounded-xl bg-muted text-muted-foreground sm:grid">
+          <TargetIcon />
+        </span>
+        <Field
+          label="Target band"
+          hint="Sets the marker on your band dial and the gap we track. Optional."
+          className="flex-1"
         >
-          Target band
-        </label>
-        <select
-          id="target-band"
-          value={band}
-          onChange={(e) => setBand(e.target.value)}
-          className={fieldClass}
-        >
-          <option value="">Not sure yet</option>
-          {BANDS.map((b) => (
-            <option key={b} value={String(b)}>
-              {b.toFixed(1)}
-            </option>
-          ))}
-        </select>
-        <p className="text-xs text-muted-foreground">
-          We&rsquo;ll use this to track your progress. Optional.
-        </p>
+          <FieldSelect value={band} onChange={(e) => setBand(e.target.value)}>
+            <option value="">Not sure yet</option>
+            {BANDS.map((b) => (
+              <option key={b} value={String(b)}>
+                {b.toFixed(1)}
+              </option>
+            ))}
+          </FieldSelect>
+        </Field>
       </div>
 
-      <div className="space-y-2">
-        <label
-          htmlFor="test-date"
-          className="block text-sm font-medium text-foreground"
+      <div className="flex gap-4">
+        <span className="mt-0.5 hidden h-10 w-10 shrink-0 place-items-center rounded-xl bg-muted text-muted-foreground sm:grid">
+          <CalendarIcon />
+        </span>
+        <Field
+          label="Test date"
+          hint="When you sit the real exam. Turns into a countdown. Optional."
+          className="flex-1"
         >
-          Test date
-        </label>
-        <input
-          id="test-date"
-          type="date"
-          value={date}
-          onChange={(e) => setDate(e.target.value)}
-          className={fieldClass}
-        />
-        <p className="text-xs text-muted-foreground">
-          When are you sitting the real exam? Optional.
-        </p>
+          <FieldInput
+            type="date"
+            min={today()}
+            value={date}
+            onChange={(e) => setDate(e.target.value)}
+          />
+        </Field>
       </div>
 
-      <div className="flex flex-col gap-3 pt-2 sm:flex-row sm:items-center">
+      <div className="flex flex-col gap-3 pt-1 sm:flex-row sm:items-center">
         <Button type="submit" variant="accent" size="lg">
           Start a mock
         </Button>
         <button
           type="button"
           onClick={() => onStart(null)}
-          className="rounded-full px-4 py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
+          className="cursor-pointer rounded-full px-4 py-2 text-sm font-medium text-muted-foreground transition-colors duration-200 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
         >
           Skip for now
         </button>

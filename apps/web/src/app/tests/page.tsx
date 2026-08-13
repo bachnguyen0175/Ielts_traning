@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
-import Link from "next/link";
-import { Container } from "@/components/ui/container";
-import { Wordmark } from "@/components/landing/wordmark";
-import { AccountControl } from "@/components/auth/account-control";
+import { AppShell, PageHeader } from "@/components/ui/app-shell";
+import { Button } from "@/components/ui/button";
+import { UploadIcon } from "@/components/ui/icons";
 import { contentRepo } from "@/lib/data/client";
 import { TestCatalog } from "@/components/tests/test-catalog";
 
@@ -14,26 +13,18 @@ export const metadata: Metadata = {
 export default function TestsPage() {
   const tests = contentRepo.listTests();
   return (
-    <main className="flex min-h-dvh flex-col">
-      <div className="border-b border-border/70">
-        <Container className="flex h-16 items-center justify-between">
-          <Wordmark />
-          <AccountControl />
-        </Container>
-      </div>
-      <Container className="w-full max-w-3xl flex-1 py-12">
-        <h1 className="font-serif text-3xl font-semibold tracking-tight text-foreground">
-          Test library
-        </h1>
-        <p className="mt-2 mb-8 text-muted-foreground">
-          Pick a test to sit under authentic conditions, or{" "}
-          <Link href="/import" className="underline underline-offset-4">
-            import your own paper
-          </Link>
-          .
-        </p>
-        <TestCatalog tests={tests} />
-      </Container>
-    </main>
+    <AppShell width="content">
+      <PageHeader
+        eyebrow="Choose your paper"
+        title="Test library"
+        lead="Every test here runs under authentic conditions — real timing, play-once audio, and no marking until you submit."
+      >
+        <Button href="/import" variant="outline" size="md">
+          <UploadIcon className="h-4 w-4" />
+          Import a paper
+        </Button>
+      </PageHeader>
+      <TestCatalog tests={tests} />
+    </AppShell>
   );
 }

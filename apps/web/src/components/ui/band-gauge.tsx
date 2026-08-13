@@ -20,9 +20,12 @@ function pointOnCircle(band: number, radius: number) {
 export function BandGauge({
   band,
   target,
+  caption = "Latest band",
 }: {
   band?: number;
   target?: number;
+  /** What the number underneath means — differs between the dashboard and a results screen. */
+  caption?: string;
 }) {
   const value = band ?? 0;
   const filled = ARC * (value / MAX_BAND);
@@ -31,7 +34,7 @@ export function BandGauge({
 
   const label =
     band != null
-      ? `Latest band ${band.toFixed(1)} of 9${target != null ? `, target ${target.toFixed(1)}` : ""}`
+      ? `${caption} ${band.toFixed(1)} of 9${target != null ? `, target ${target.toFixed(1)}` : ""}`
       : "No band score yet";
 
   return (
@@ -94,7 +97,7 @@ export function BandGauge({
           {band != null ? band.toFixed(1) : "—"}
         </span>
         <span className="mt-1.5 text-xs font-medium uppercase tracking-[0.14em] text-muted-foreground">
-          {band != null ? "Latest band" : "No mock yet"}
+          {band != null ? caption : "No mock yet"}
         </span>
       </div>
     </div>

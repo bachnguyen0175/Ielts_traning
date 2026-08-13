@@ -75,7 +75,7 @@ export function SpeakingRecorder({
         <button
           type="button"
           onClick={() => setState("idle")}
-          className="text-sm font-medium text-muted-foreground hover:text-foreground"
+          className="cursor-pointer rounded-full text-sm font-medium text-muted-foreground transition-colors duration-200 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
         >
           Re-record
         </button>
@@ -88,9 +88,10 @@ export function SpeakingRecorder({
       <button
         type="button"
         onClick={stop}
-        className="inline-flex items-center gap-2 rounded-full bg-accent px-5 py-2 text-sm font-medium text-accent-foreground shadow-sm"
+        className="inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-full bg-accent px-5 text-sm font-medium text-accent-foreground shadow-sm transition-all duration-200 hover:brightness-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
       >
-        <span className="h-2.5 w-2.5 animate-pulse rounded-full bg-current" />
+        {/* motion-safe: every animation in this app is opt-out-able. */}
+        <span className="h-2.5 w-2.5 rounded-full bg-current motion-safe:animate-pulse" />
         Stop recording
       </button>
     );
@@ -100,7 +101,7 @@ export function SpeakingRecorder({
     <button
       type="button"
       onClick={start}
-      className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-5 py-2 text-sm font-medium text-foreground shadow-sm hover:border-primary/40"
+      className="inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-full border border-border bg-card px-5 text-sm font-medium text-foreground shadow-sm transition-colors duration-200 hover:border-primary/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
     >
       <span className="h-2.5 w-2.5 rounded-full bg-accent" />
       Record answer

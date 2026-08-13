@@ -49,15 +49,21 @@ export const HighlightablePassage = memo(function HighlightablePassage({
   }
 
   return (
-    <article className="space-y-3">
-      <h3 className="font-serif text-xl font-semibold text-foreground">
+    <article>
+      <h3 className="font-serif text-xl font-semibold tracking-tight text-foreground">
         {title}
       </h3>
-      <div ref={ref} onMouseUp={onMouseUp} className="space-y-3">
+      {/* The passage is the primary text on this screen and gets read for
+          minutes at a stretch, so it takes full foreground contrast and a
+          generous measure — muted grey here was the app's worst legibility
+          offender. */}
+      <div
+        ref={ref}
+        onMouseUp={onMouseUp}
+        className="mt-4 max-w-prose space-y-4 text-[0.95rem] leading-[1.75] text-foreground"
+      >
         {body?.split("\n\n").map((para, i) => (
-          <p key={i} className="leading-relaxed text-muted-foreground">
-            {para}
-          </p>
+          <p key={i}>{para}</p>
         ))}
       </div>
       {btn && (
@@ -68,10 +74,11 @@ export const HighlightablePassage = memo(function HighlightablePassage({
           style={{
             position: "fixed",
             left: btn.x,
-            top: btn.y - 44,
+            // Flip below the selection when there is no room above it.
+            top: btn.y > 52 ? btn.y - 44 : btn.y + 24,
             transform: "translateX(-50%)",
           }}
-          className="z-50 rounded-lg bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground shadow-lg"
+          className="z-50 cursor-pointer rounded-lg bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground shadow-lg"
         >
           Highlight
         </button>

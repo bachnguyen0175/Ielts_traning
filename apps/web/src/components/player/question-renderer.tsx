@@ -1,6 +1,7 @@
 "use client";
 
 import type { QuestionGroup } from "@composed/domain";
+import { cx } from "@/lib/cx";
 
 function optionsFor(group: QuestionGroup): string[] | null {
   const m = group.answerMatch;
@@ -26,66 +27,88 @@ export function QuestionRenderer({
 
   return (
     <ol className="space-y-6">
-      {group.questions.map((q) => (
-        <li key={q.number} className="space-y-3">
-          <div className="flex gap-3">
-            <span className="mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-md bg-muted text-xs font-semibold text-muted-foreground">
-              {q.number}
-            </span>
-            {q.content && <p className="text-foreground">{q.content}</p>}
-          </div>
+      {group.questions.map((q) => {
+        const answer = responses[q.number];
+        const answered = answer != null && answer !== "";
 
-          {options ? (
-            <fieldset
-              role="radiogroup"
-              aria-label={`Question ${q.number}`}
-              className="flex flex-wrap gap-2 pl-9"
-            >
-              {options.map((opt) => {
-                const id = `q${q.number}-${opt}`;
-                const selected = responses[q.number] === opt;
-                return (
-                  <label
-                    key={opt}
-                    htmlFor={id}
-                    className={[
-                      "cursor-pointer rounded-lg border px-3 py-2 text-sm font-medium transition-colors",
-                      selected
-                        ? "border-primary bg-primary/10 text-foreground"
-                        : "border-border bg-card text-muted-foreground hover:border-primary/40",
-                      disabled ? "pointer-events-none opacity-60" : "",
-                    ].join(" ")}
-                  >
-                    <input
-                      id={id}
-                      type="radio"
-                      name={`q-${q.number}`}
-                      value={opt}
-                      checked={selected}
-                      disabled={disabled}
-                      onChange={() => onAnswer(q.number, opt)}
-                      className="sr-only"
-                    />
-                    <span>{opt}</span>
-                  </label>
-                );
-              })}
-            </fieldset>
-          ) : (
-            <div className="pl-9">
-              <input
-                type="text"
-                aria-label={`Question ${q.number}`}
-                value={responses[q.number] ?? ""}
-                disabled={disabled}
-                onChange={(e) => onAnswer(q.number, e.target.value)}
-                className="w-full max-w-sm rounded-lg border border-border bg-card px-3 py-2 text-foreground outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40 disabled:opacity-60"
-                placeholder="Type your answer"
-              />
+        return (
+          <li key={q.number} className="space-y-3">
+            <div className="flex gap-3">
+              <span
+                className={cx(
+                  "mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-md text-xs font-semibold tabular-nums transition-colors duration-200",
+                  answered
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-muted text-muted-foreground",
+                )}
+              >
+                {q.number}
+              </span>
+              {q.content && (
+                <p className="leading-relaxed text-foreground">{q.content}</p>
+              )}
             </div>
-          )}
-        </li>
-      ))}
+
+            {options ? (
+              <fieldset
+                role="radiogroup"
+                aria-label={`Question ${q.number}`}
+                className="flex flex-wrap gap-2 pl-9"
+              >
+                {options.map((opt) => {
+                  const id = `q${q.number}-${opt}`;
+                  const selected = answer === opt;
+                  return (
+                    <label
+                      key={opt}
+                      htmlFor={id}
+                      className={cx(
+                        // 44px min touch target — options are the most-tapped
+                        // control in the whole app.
+                        "inline-flex min-h-11 cursor-pointer items-center rounded-xl border px-4 text-sm font-medium",
+                        "transition-all duration-150 has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-ring has-[:focus-visible]:ring-offset-2 has-[:focus-visible]:ring-offset-background",
+                        selected
+                          ? "border-primary bg-primary text-primary-foreground shadow-sm"
+                          : "border-border bg-card text-muted-foreground hover:border-primary/40 hover:text-foreground",
+                        disabled && "pointer-events-none opacity-60",
+                      )}
+                    >
+                      <input
+                        id={id}
+                        type="radio"
+                        name={`q-${q.number}`}
+                        value={opt}
+                        checked={selected}
+                        disabled={disabled}
+                        onChange={() => onAnswer(q.number, opt)}
+                        className="sr-only"
+                      />
+                      <span>{opt}</span>
+                    </label>
+                  );
+                })}
+              </fieldset>
+            ) : (
+              <div className="pl-9">
+                <input
+                  type="text"
+                  aria-label={`Question ${q.number}`}
+                  value={answer ?? ""}
+                  disabled={disabled}
+                  onChange={(e) => onAnswer(q.number, e.target.value)}
+                  className={cx(
+                    "w-full max-w-sm rounded-xl border bg-card px-3.5 py-2.5 text-foreground outline-none",
+                    "transition-colors duration-200 placeholder:text-muted-foreground/70",
+                    "focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40 disabled:opacity-60",
+                    answered ? "border-primary/50" : "border-border",
+                  )}
+                  placeholder="Type your answer"
+                />
+              </div>
+            )}
+          </li>
+        );
+      })}
     </ol>
   );
 }

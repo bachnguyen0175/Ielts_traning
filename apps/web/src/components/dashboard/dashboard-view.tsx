@@ -1,7 +1,7 @@
 import type { Attempt } from "@composed/domain";
 import { Button } from "@/components/ui/button";
 import { nextAction } from "./next-action";
-import { BandGauge } from "./band-gauge";
+import { BandGauge } from "@/components/ui/band-gauge";
 import { TrendSparkline } from "./trend-sparkline";
 
 function daysUntil(iso: string): number | null {

@@ -5,13 +5,101 @@ import type { TestSummary } from "@/lib/data/repositories";
 import { importedTests } from "@/lib/data/imported-tests";
 import { summarize } from "@/lib/data/local";
 import { Button } from "@/components/ui/button";
+import { Card, CardBody } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { EmptyState } from "@/components/ui/empty-state";
+import {
+  HeadphonesIcon,
+  BookIcon,
+  PenIcon,
+  MicIcon,
+  ClockIcon,
+  LibraryIcon,
+  ArrowRightIcon,
+} from "@/components/ui/icons";
 
-const SKILL_SHORT: Record<string, string> = {
-  listening: "L",
-  reading: "R",
-  writing: "W",
-  speaking: "S",
-};
+const SKILLS = {
+  listening: { label: "Listening", Icon: HeadphonesIcon },
+  reading: { label: "Reading", Icon: BookIcon },
+  writing: { label: "Writing", Icon: PenIcon },
+  speaking: { label: "Speaking", Icon: MicIcon },
+} as const;
+
+function SkillChip({ skill }: { skill: string }) {
+  const entry = SKILLS[skill as keyof typeof SKILLS];
+  if (!entry) return null;
+  const { label, Icon } = entry;
+  return (
+    <span className="inline-flex items-center gap-1.5 rounded-lg bg-muted px-2 py-1 text-xs font-medium text-muted-foreground">
+      <Icon className="h-3.5 w-3.5" />
+      {label}
+    </span>
+  );
+}
+
+function TestCard({ test }: { test: TestSummary }) {
+  return (
+    <Card className="group flex h-full flex-col transition-all duration-200 hover:border-foreground/20 hover:shadow-lg">
+      <CardBody className="flex flex-1 flex-col">
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            {test.source && (
+              <p className="text-xs font-medium uppercase tracking-[0.12em] text-muted-foreground">
+                {test.source}
+              </p>
+            )}
+            <h3 className="mt-1.5 font-serif text-lg font-semibold leading-snug tracking-tight text-foreground">
+              {test.title}
+            </h3>
+          </div>
+          {test.access === "private" && (
+            <Badge tone="neutral" className="shrink-0">
+              Private
+            </Badge>
+          )}
+        </div>
+
+        <div className="mt-4 flex flex-wrap gap-1.5">
+          {test.skills.map((s, i) => (
+            <SkillChip key={`${s}-${i}`} skill={s} />
+          ))}
+        </div>
+
+        <dl className="mt-5 flex flex-wrap items-center gap-x-5 gap-y-2 border-t border-border/70 pt-4 text-sm text-muted-foreground">
+          <div className="flex items-center gap-1.5">
+            <ClockIcon className="h-4 w-4" />
+            <dt className="sr-only">Duration</dt>
+            <dd>{test.durationMinutes} min</dd>
+          </div>
+          {test.totalQuestions > 0 && (
+            <div className="flex items-center gap-1.5">
+              <LibraryIcon className="h-4 w-4" />
+              <dt className="sr-only">Questions</dt>
+              <dd>{test.totalQuestions} questions</dd>
+            </div>
+          )}
+          <div>
+            <dt className="sr-only">Test type</dt>
+            <dd className="capitalize">{test.type}</dd>
+          </div>
+        </dl>
+
+        <div className="mt-6 flex-1" />
+
+        <Button
+          href={`/mock?test=${test.id}`}
+          variant="accent"
+          size="md"
+          aria-label={`Start ${test.title}`}
+          className="w-full"
+        >
+          Start
+          <ArrowRightIcon className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-0.5" />
+        </Button>
+      </CardBody>
+    </Card>
+  );
+}
 
 export function TestCatalog({ tests }: { tests: TestSummary[] }) {
   // `tests` is the server-rendered list. Imported tests live in localStorage,
@@ -30,64 +118,22 @@ export function TestCatalog({ tests }: { tests: TestSummary[] }) {
 
   if (all.length === 0) {
     return (
-      <p className="rounded-2xl border border-dashed border-border bg-card/50 p-10 text-center text-muted-foreground">
-        No tests available yet.
-      </p>
+      <EmptyState icon={<LibraryIcon />} title="No tests available yet">
+        Import a Reading paper written in markdown and it will show up here,
+        ready to sit.
+      </EmptyState>
     );
   }
 
   return (
     <div className="grid gap-5 sm:grid-cols-2">
-      {all.map((t) => (
+      {all.map((t, i) => (
         <div
           key={t.id}
-          className="flex flex-col gap-4 rounded-2xl border border-border bg-card p-6"
+          className="enter"
+          style={{ ["--i" as string]: Math.min(i, 6) }}
         >
-          <div className="flex items-start justify-between gap-3">
-            <div>
-              {t.source && (
-                <p className="text-xs font-semibold uppercase tracking-wide text-accent-foreground/70 dark:text-accent">
-                  {t.source}
-                </p>
-              )}
-              <h3 className="mt-1 font-serif text-lg font-semibold text-foreground">
-                {t.title}
-              </h3>
-            </div>
-            {t.access === "private" && (
-              <span className="shrink-0 rounded-full border border-border bg-muted px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
-                Private
-              </span>
-            )}
-          </div>
-
-          <div className="flex flex-wrap gap-1.5">
-            {t.skills.map((s, i) => (
-              <span
-                key={`${s}-${i}`}
-                className="grid h-6 w-6 place-items-center rounded-md bg-muted text-xs font-semibold text-muted-foreground"
-                title={s}
-              >
-                {SKILL_SHORT[s]}
-              </span>
-            ))}
-          </div>
-
-          <p className="text-sm text-muted-foreground">
-            {t.totalQuestions > 0 && `${t.totalQuestions} questions · `}
-            {t.durationMinutes} min · {t.type}
-          </p>
-
-          <div className="mt-auto">
-            <Button
-              href={`/mock?test=${t.id}`}
-              variant="accent"
-              size="md"
-              aria-label={`Start ${t.title}`}
-            >
-              Start
-            </Button>
-          </div>
+          <TestCard test={t} />
         </div>
       ))}
     </div>
