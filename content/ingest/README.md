@@ -15,6 +15,10 @@ fetch page (follows 301)  →  parse prose + question stems + answers
   [`../seeds/`](../seeds/). The crawler supplies **passage prose** and
   **question stems**; its extracted answers are only *cross-checked* against the
   seed (mismatches are printed, never silently trusted).
+- ⚠️ **Seeds are gitignored** *(2026-08-13)* — they carry Cambridge titles,
+  verbatim instructions, and answer keys. A fresh clone therefore has none, so
+  `ingest.py` (which requires `--seed`) cannot run until you supply one.
+  `ingest_auto.py` is seed-free; prefer it.
 - Output goes to `apps/web/src/lib/content/ingested/<id>.reading.data.json`,
   which is **gitignored** — copyrighted prose never enters git.
 

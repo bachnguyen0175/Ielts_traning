@@ -2,6 +2,15 @@
 
 > Status: Accepted (FE/mock phase)
 > Date: 2026-07-25
+>
+> **Amended 2026-08-13:** `content/seeds/` is now **gitignored** too. Prose was
+> always withheld from a seed, but it still carried Cambridge titles, verbatim
+> question instructions, and the full answer key on a public repo — the same
+> exposure this ADR gitignores the *output* to avoid. `ingest_auto.py` is
+> seed-free, so nothing depends on a committed seed. **The previously committed
+> seed remains in git history** (removing it requires rewriting `main`).
+> See also [ADR-0008](./0008-authored-content-pipeline.md) for the deployable,
+> committed lane.
 
 ## Context
 

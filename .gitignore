@@ -251,6 +251,10 @@ cam*_test*.html
 cam*t*.html
 *.source.html
 content/ingest/sources/
+# Reference seeds — carry Cambridge titles, verbatim instructions and answer
+# keys ("REFERENCE ONLY, not licensed for distribution"). Local dev aid only;
+# ingest_auto.py is seed-free and needs one solely for --validate. See ADR-0006.
+content/seeds/
 # Added by code-review-graph
 .code-review-graph/
 # Local MCP config — machine-specific (absolute cwd); keep out of git
