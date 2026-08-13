@@ -1,6 +1,7 @@
 import type { Attempt, SectionScore, Submission, Test } from "@composed/domain";
 import { SAMPLE_MOCK } from "../content/sample-mock";
 import { INGESTED_TESTS } from "../content/ingested";
+import { AUTHORED_TESTS } from "../content/authored";
 import { dueAt, reviewCard } from "../srs";
 import type {
   AttemptRepository,
@@ -32,7 +33,7 @@ export function memoryStorage(): StorageLike {
   };
 }
 
-const TESTS: Test[] = [SAMPLE_MOCK, ...INGESTED_TESTS];
+const TESTS: Test[] = [SAMPLE_MOCK, ...AUTHORED_TESTS, ...INGESTED_TESTS];
 
 function summarize(t: Test): TestSummary {
   const skills = t.sections.map((s) => s.skill);

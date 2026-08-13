@@ -1,9 +1,7 @@
 # Content authoring format (`.test.md`)
 
-> **Status: specification — the parser is not yet implemented.**
-> This document defines the markdown dialect that `pnpm content:build` will
-> accept. Nothing described here runs today. Written spec-first so the
-> implementation has a target; see
+> **Status: implemented** *(2026-08-13)* — `pnpm content:build <file>` accepts
+> everything below. Parser: `apps/web/src/lib/content/parse-md.ts`; decision:
 > [ADR-0008](./architecture/decisions/0008-authored-content-pipeline.md).
 
 Reference for authoring an original IELTS Academic test as a markdown file and
@@ -316,11 +314,15 @@ You do not write `answerMatch`. It follows from the question type:
 
 | Type | Inferred |
 |---|---|
-| `sentence_completion`, `summary_completion`, `short_answer` | `{kind: "text", caseSensitive: false, normalize: ["trim","collapse-ws","lowercase"]}` |
+| `sentence_completion`, `summary_completion`, `short_answer` | `{kind: "text", normalize: ["trim","collapse-ws","lowercase"]}` |
 | `true_false_not_given` | `{kind: "enum", options: ["TRUE","FALSE","NOT GIVEN"]}` |
 | `yes_no_not_given` | `{kind: "enum", options: ["YES","NO","NOT GIVEN"]}` |
 | `multiple_choice_single`, `matching_information`, `matching_features`, `matching_headings` | `{kind: "letter"}` |
 | `multiple_choice_multi` | `{kind: "letter-set", anyOrder: true}` |
+
+`caseSensitive` is deliberately **not** emitted for text matches: the scorer
+reads it as `if (match.caseSensitive)` (`packages/domain/src/scoring/answer-match.ts`),
+so absent and `false` behave identically and writing it would be dead weight.
 
 Override only when a group genuinely differs — e.g. an answer where case
 carries meaning:
