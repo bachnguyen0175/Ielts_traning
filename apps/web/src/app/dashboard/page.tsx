@@ -24,10 +24,15 @@ export default async function DashboardPage() {
           <AccountControl />
         </Container>
       </div>
-      <Container className="w-full max-w-2xl flex-1 py-12">
-        <h1 className="mb-8 font-serif text-3xl font-semibold tracking-tight text-foreground">
-          {greeting}
-        </h1>
+      <Container className="w-full max-w-5xl flex-1 py-12">
+        <header className="enter mb-8" style={{ ["--i" as string]: 0 }}>
+          <h1 className="font-serif text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
+            {greeting}
+          </h1>
+          <p className="mt-2 text-muted-foreground">
+            One step at a time — here is where you stand.
+          </p>
+        </header>
         <DashboardClient userId={userId} />
         {userId && <MigrateLocalData userId={userId} />}
       </Container>
