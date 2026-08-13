@@ -10,7 +10,7 @@ here with the domain field it produces.
 
 **Scope:** original or licensed content only, which is committed and deployed.
 Cambridge material uses a separate, local-only lane —
-[ADR-0006](./architecture/decisions/0006-content-ingestion.md).
+[`content/README.md`](../content/README.md).
 
 ---
 
@@ -466,7 +466,7 @@ one `Passage` (`r-p1`), two `QuestionGroup`s (`r-p1-g1` with `enum` matching,
 | Doc | Why |
 |---|---|
 | [ADR-0008](./architecture/decisions/0008-authored-content-pipeline.md) | Why markdown, why a CLI, why committed output |
-| [ADR-0006](./architecture/decisions/0006-content-ingestion.md) | The separate Cambridge lane (gitignored, never deployed) |
+| [`content/README.md`](../content/README.md) | The separate Cambridge lane (gitignored, never deployed) |
 | [`architecture/data-model.md`](./architecture/data-model.md) | The entities this format produces |
 | [`domain/ielts-overview.md`](./domain/ielts-overview.md) | Authentic format, timing, question types |
 | [`content/README.md`](../content/README.md) | Copyright posture — what may be committed |

@@ -2,6 +2,7 @@ import { render, screen } from "@testing-library/react";
 import { describe, it, expect } from "vitest";
 import type { TestSummary } from "@/lib/data/repositories";
 import { TestCatalog } from "./test-catalog";
+import { importedTests } from "@/lib/data/imported-tests";
 
 const tests: TestSummary[] = [
   {
@@ -28,6 +29,8 @@ const tests: TestSummary[] = [
 
 describe("TestCatalog", () => {
   it("renders each test with a start link to the pre-test", () => {
+    importedTests.reset(); // storage was written directly, not via save()
+
     render(<TestCatalog tests={tests} />);
     const start = screen.getByRole("link", {
       name: /start cambridge 15 — reading test 1/i,
@@ -36,6 +39,8 @@ describe("TestCatalog", () => {
   });
 
   it("flags private (Cambridge-derived) tests", () => {
+    importedTests.reset(); // storage was written directly, not via save()
+
     render(<TestCatalog tests={tests} />);
     expect(screen.getByText(/^private$/i)).toBeInTheDocument();
     expect(screen.getByText(/cambridge ielts 15/i)).toBeInTheDocument();
@@ -44,5 +49,58 @@ describe("TestCatalog", () => {
   it("shows an empty state when there are no tests", () => {
     render(<TestCatalog tests={[]} />);
     expect(screen.getByText(/no tests available/i)).toBeInTheDocument();
+  });
+});
+
+describe("TestCatalog — imported tests", () => {
+  it("appends tests imported in this browser to the server-rendered list", () => {
+    window.localStorage.setItem(
+      "composed:imported-tests",
+      JSON.stringify([
+        {
+          id: "imported-paper-1",
+          title: "Imported Reading Paper",
+          type: "academic",
+          source: "Imported",
+          access: "private",
+          sections: [
+            {
+              id: "s-reading",
+              skill: "reading",
+              order: 1,
+              durationSeconds: 3600,
+              passages: [
+                {
+                  id: "r-p1",
+                  order: 1,
+                  title: "P1",
+                  questionGroups: [
+                    {
+                      id: "g1",
+                      range: [1, 1],
+                      type: "short_answer",
+                      instruction: "Answer.",
+                      answerMatch: { kind: "text" },
+                      questions: [{ number: 1, accept: ["a"] }],
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        },
+      ])
+    );
+
+    importedTests.reset(); // storage was written directly, not via save()
+
+    render(<TestCatalog tests={tests} />);
+
+    // Built-ins still render, and the imported one joins them.
+    expect(screen.getByText("Composed Sample — Academic Mock 1")).toBeTruthy();
+    expect(screen.getByText("Imported Reading Paper")).toBeTruthy();
+    expect(
+      screen.getByRole("link", { name: /start imported reading paper/i })
+    ).toHaveAttribute("href", "/mock?test=imported-paper-1");
   });
 });

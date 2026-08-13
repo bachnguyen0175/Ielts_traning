@@ -1,7 +1,7 @@
 # Deployment
 
 > Status: 🟢 v1 — Vercel, public, **sample content only**. Cambridge content is
-> never deployed (copyright — see [ADR-0006](./architecture/decisions/0006-content-ingestion.md),
+> never deployed (copyright — see [`content/README.md`](../content/README.md),
 > [mock-data-registry](./mock-data-registry.md)).
 
 ## What deploys

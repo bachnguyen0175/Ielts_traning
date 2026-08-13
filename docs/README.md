@@ -64,7 +64,7 @@ target band / test date). Post-sign-in lands on `/dashboard`.
 
 **FE phase complete & deployed** — the whole mock flow works end-to-end; **live
 on Vercel** at `ielts-traning-web-nhgz.vercel.app` (sample-only; Cambridge
-content never deployed, per [ADR-0006](./architecture/decisions/0006-content-ingestion.md)).
+content never deployed, per [`content/README.md`](../content/README.md)).
 Auto-deploys on push to `main`. See [`deploy.md`](./deploy.md).
 
 **BE phase — Phases 1–3 done & live:**
@@ -82,7 +82,7 @@ Auto-deploys on push to `main`. See [`deploy.md`](./deploy.md).
   write-through; guest→account migration on first sign-in. Guests stay local.
 
 **Content ingestion:** seed-anchored ingester
-([ADR-0006](./architecture/decisions/0006-content-ingestion.md)); Cambridge 15
+(see [`content/ingest/README.md`](../content/ingest/README.md)); Cambridge 15
 Reading Test 1 sittable locally (gitignored, copyright).
 
 **Authored content:** markdown → committed `Test` pipeline specified

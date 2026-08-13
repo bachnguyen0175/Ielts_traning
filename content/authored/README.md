@@ -14,7 +14,7 @@ and both generated files.
 - **Format:** [`docs/content-authoring-format.md`](../../docs/content-authoring-format.md)
 - **Decision:** [ADR-0008](../../docs/architecture/decisions/0008-authored-content-pipeline.md)
 - **Not this lane:** Cambridge material — gitignored, never deployed
-  ([ADR-0006](../../docs/architecture/decisions/0006-content-ingestion.md))
+  (see [`content/README.md`](../README.md))
 
 Empty for now: the sample mock is still hand-written TypeScript
 (`apps/web/src/lib/content/sample-mock.ts`), and whether it migrates here is an

@@ -9,7 +9,7 @@ The 2026-07-26 pivot to a **public product** (decision #5 in
 [`docs/README.md`](../../README.md)) means deployed content must be original or
 licensed. That leaves a gap:
 
-- [ADR-0006](./0006-content-ingestion.md) covers **Cambridge** content — scraped,
+- the Cambridge ingester (`content/ingest/`) covers **Cambridge** content — scraped,
   written to a gitignored `ingested/` directory, never committed, never
   deployed. It is a local-only dev aid and cannot serve real users.
 - The only deployable test today is `apps/web/src/lib/content/sample-mock.ts` —
@@ -51,11 +51,11 @@ apps/web/src/lib/data/local.ts → TESTS → MockContentRepository → /tests
   with no parser dependency — Vercel runs `next build`, nothing else.
 - **Delivery is a CLI**, `pnpm content:build <file>`. No upload UI, no database.
 - **Two lanes, one seam.** The authored lane reuses the exact registry seam
-  ADR-0006 built for Cambridge, so screens are unchanged:
+  the ingester built for Cambridge, so screens are unchanged:
 
   | Lane | ADR | Source | Output | Git | Deployed |
   |---|---|---|---|---|---|
-  | Cambridge | [0006](./0006-content-ingestion.md) | scraped HTML | `content/ingested/` | ignored | **never** |
+  | Cambridge | [`content/ingest/`](../../../content/ingest/README.md) | scraped HTML | `content/ingested/` | ignored | **never** |
   | Authored | 0008 | your markdown | `content/authored/` | **committed** | yes |
 
   Both produce the same `Test` type and both land in `TESTS`. The copyright

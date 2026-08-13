@@ -36,7 +36,7 @@ export function memoryStorage(): StorageLike {
 
 const TESTS: Test[] = [SAMPLE_MOCK, ...AUTHORED_TESTS, ...INGESTED_TESTS];
 
-function summarize(t: Test): TestSummary {
+export function summarize(t: Test): TestSummary {
   const skills = t.sections.map((s) => s.skill);
   const totalQuestions = t.sections
     .flatMap((s) => s.passages ?? [])

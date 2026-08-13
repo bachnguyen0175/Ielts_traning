@@ -5,7 +5,7 @@ so a fresh clone / Vercel build succeeds with only the sample mock.
 
 The `*.data.json` files here are **gitignored** — they hold Cambridge passage
 prose + question wording, ingested for **private study only**, never committed or
-deployed (see [`content/README.md`](../../../../../content/README.md) + ADR-0006).
+deployed (see [`content/README.md`](../../../../../../content/README.md) + ADR-0006).
 
 ## Restoring Cambridge tests locally
 

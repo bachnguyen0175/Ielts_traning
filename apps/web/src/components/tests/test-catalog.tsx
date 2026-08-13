@@ -1,4 +1,9 @@
+"use client";
+
+import { useMemo, useSyncExternalStore } from "react";
 import type { TestSummary } from "@/lib/data/repositories";
+import { importedTests } from "@/lib/data/imported-tests";
+import { summarize } from "@/lib/data/local";
 import { Button } from "@/components/ui/button";
 
 const SKILL_SHORT: Record<string, string> = {
@@ -9,7 +14,21 @@ const SKILL_SHORT: Record<string, string> = {
 };
 
 export function TestCatalog({ tests }: { tests: TestSummary[] }) {
-  if (tests.length === 0) {
+  // `tests` is the server-rendered list. Imported tests live in localStorage,
+  // which the server cannot read, so they are APPENDED on the client — the
+  // first render matches the server, then the imports fill in. Subscribing
+  // also picks up an import made in another tab.
+  const imported = useSyncExternalStore(
+    importedTests.subscribe,
+    importedTests.list,
+    importedTests.serverList
+  );
+  const all = useMemo(
+    () => [...tests, ...imported.map(summarize)],
+    [tests, imported]
+  );
+
+  if (all.length === 0) {
     return (
       <p className="rounded-2xl border border-dashed border-border bg-card/50 p-10 text-center text-muted-foreground">
         No tests available yet.
@@ -19,7 +38,7 @@ export function TestCatalog({ tests }: { tests: TestSummary[] }) {
 
   return (
     <div className="grid gap-5 sm:grid-cols-2">
-      {tests.map((t) => (
+      {all.map((t) => (
         <div
           key={t.id}
           className="flex flex-col gap-4 rounded-2xl border border-border bg-card p-6"

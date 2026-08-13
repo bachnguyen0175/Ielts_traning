@@ -30,7 +30,7 @@ The ingester ([`ingest/README.md`](./ingest/README.md)): fetches one
 onto a seed's answer keys, and writes a playable `Test` JSON to
 `apps/web/src/lib/content/ingested/<id>.reading.data.json`. Committed code holds
 no prose; its output is gitignored. See
-[ADR-0006](../docs/architecture/decisions/0006-content-ingestion.md).
+the copyright posture above.
 
 ## `apps/web/src/lib/content/`
 
