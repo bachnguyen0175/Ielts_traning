@@ -14,8 +14,7 @@ a deployment. This is intentional and non-negotiable while the app is public.
 ## Deploy from GitHub (the safe path)
 
 Deploy from the **Git integration**, not a local `vercel --prod`. Git builds the
-*committed* repo, where the copyrighted data files are absent by construction. A
-local CLI deploy could upload gitignored files from disk — don't.
+*committed* rep. A local CLI deploy could upload gitignored files from disk — don't.
 
 1. **vercel.com → Add New… → Project**.
 2. **Import** `bachnguyen0175/Ielts_traning`.

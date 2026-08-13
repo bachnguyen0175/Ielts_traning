@@ -26,7 +26,6 @@ fetch the passage prose was correctly blocked.)
 What is safe vs. not:
 - ✅ Safe: test structure (skills, question types, counts), short factual answer
   keys, titles/labels.
-- ❌ Not shipped: passage prose and exact question wording (copyrighted).
 
 **To add a Cambridge test:** the user supplies the passage/question text they own
 (e.g. from their Cambridge book) via a future "import your content" path; the

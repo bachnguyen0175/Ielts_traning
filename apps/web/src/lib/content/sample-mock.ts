@@ -1,8 +1,8 @@
 import type { Test } from "@composed/domain";
 
 /**
- * A compact, ORIGINAL Academic sample mock (not derived from copyrighted
- * material). Real structure, every objective question-type represented,
+ * A compact, ORIGINAL Academic sample mock. 
+ * Real structure, every objective question-type represented,
  * shortened durations so the flow is demoable and E2E-testable. Prose here is
  * original and safe to ship.
  */

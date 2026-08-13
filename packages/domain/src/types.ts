@@ -100,7 +100,7 @@ export interface Test {
   sections: Section[];
   /** e.g. "Cambridge IELTS 15" or "Composed original" */
   source?: string;
-  /** private = derived from copyrighted material; never publicly distribute */
+  /** private = derived from copyrighted material */
   access?: "public" | "private";
 }
 

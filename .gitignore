@@ -243,19 +243,16 @@ test-results/
 playwright-report/
 .playwright/
 
-# ── Ingested Cambridge content (private-study only; never commit copyrighted prose) ──
+# ── Ingested Cambridge content ──
 apps/web/src/lib/content/ingested/*.data.json
 content/.ingested/
-# Raw source pages dropped in for local ingestion (passages + keys = copyrighted)
 cam*_test*.html
 cam*t*.html
 *.source.html
 content/ingest/sources/
-# Scraped pages saved as markdown (same copyrighted prose, different extension)
 content/ingest/*.md
 !content/ingest/README.md
 cambridge*.md
-# WSL download artifacts
 *:Zone.Identifier
 # Reference seeds — carry Cambridge titles, verbatim instructions and answer
 # keys ("REFERENCE ONLY, not licensed for distribution"). Local dev aid only;

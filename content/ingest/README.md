@@ -20,7 +20,6 @@ fetch page (follows 301)  →  parse prose + question stems + answers
   `ingest.py` (which requires `--seed`) cannot run until you supply one.
   `ingest_auto.py` is seed-free; prefer it.
 - Output goes to `apps/web/src/lib/content/ingested/<id>.reading.data.json`,
-  which is **gitignored** — copyrighted prose never enters git.
 
 ## Usage
 
@@ -75,9 +74,6 @@ python3 content/ingest/ingest_auto.py --volume 15 --test 1 --html page.html \
   gaps** — no silently-wrong tests.
 - Validated **40/40** against the cam15 test-1 seed; ingested cam15 T1–4 + cam14 T1
   locally (all sittable + auto-scored).
-- Dropped-in source pages (`cam*_test*.html`, `*.source.html`) are **gitignored**
-  (they hold copyrighted passages + keys). Output data.json stays gitignored and
-  `index.ts` skip-worktree'd, exactly as with `ingest.py`.
 
 ## Known gaps (follow-ups)
 

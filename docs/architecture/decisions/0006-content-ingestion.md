@@ -15,16 +15,12 @@
 ## Context
 
 The app needs real Cambridge IELTS reading tests to be worth using, but Cambridge
-prose and question wording are copyrighted (decision #5: **private study tool,
-never distributed**). `ieltstrainingonline.com` publishes the tests — and a
-feasibility probe confirmed they are cheaply crawlable: permissive `robots.txt`,
+prose and question wording are copyrighted. `ieltstrainingonline.com` publishes the tests 
+and a feasibility probe confirmed they are cheaply crawlable: permissive `robots.txt`,
 static server-rendered HTML, enumerable URLs
 (`cambridge-ielts-{10–21}-reading-test-{1–4}-…`, 301 → canonical slug), and one
 page per test carrying all three passages plus an inline answer key and
 explanations (justifying sentence `<strong>`-wrapped, tagged `(Qn)`).
-
-We must ingest for personal practice **without ever committing copyrighted prose
-to git**.
 
 ## Decision
 
