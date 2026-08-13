@@ -2,6 +2,7 @@ import type { Attempt, SectionScore, Submission, Test } from "@composed/domain";
 import { SAMPLE_MOCK } from "../content/sample-mock";
 import { INGESTED_TESTS } from "../content/ingested";
 import { AUTHORED_TESTS } from "../content/authored";
+import { importedTests } from "./imported-tests";
 import { dueAt, reviewCard } from "../srs";
 import type {
   AttemptRepository,
@@ -57,11 +58,15 @@ function summarize(t: Test): TestSummary {
 }
 
 export class MockContentRepository implements ContentRepository {
+  /** Built-in tests plus any the user imported in this browser (client only). */
+  private all(): Test[] {
+    return [...TESTS, ...importedTests.list()];
+  }
   listTests(): TestSummary[] {
-    return TESTS.map(summarize);
+    return this.all().map(summarize);
   }
   getTest(id: string) {
-    return TESTS.find((t) => t.id === id);
+    return this.all().find((t) => t.id === id);
   }
 }
 
