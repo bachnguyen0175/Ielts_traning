@@ -22,8 +22,11 @@ local CLI deploy could upload gitignored files from disk — don't.
 3. Framework auto-detects **Next.js**. In the import screen set
    **Root Directory = `apps/web`** (see below).
 4. **Environment variables** (BE phase — required for the app to run):
-   - `DATABASE_URL` (+ `DATABASE_URL_UNPOOLED`) — auto-injected by the Neon
-     Marketplace integration.
+   - `DATABASE_URL` (+ `DATABASE_URL_UNPOOLED`) — **Supabase** connection
+     strings, set by hand ([ADR-0009](./architecture/decisions/0009-database-supabase.md)).
+     `DATABASE_URL` = the transaction pooler (runtime); `DATABASE_URL_UNPOOLED`
+     = the direct connection (migrations). *Previously auto-injected by the Neon
+     Marketplace integration — Supabase requires manual entry.*
    - `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`, `CLERK_SECRET_KEY`,
      `NEXT_PUBLIC_CLERK_SIGN_IN_URL=/sign-in`, `NEXT_PUBLIC_CLERK_SIGN_UP_URL=/sign-up`
      — Clerk keys (⚠️ Clerk verifies the secret on every request; an invalid one

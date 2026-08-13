@@ -31,6 +31,7 @@ concern; start here to navigate.
 | **Screen** | [`features/vocabulary.md`](./features/vocabulary.md) | Save words + flashcard study (`/vocab`, REV-7) |
 | **Screen** | [`features/progress.md`](./features/progress.md) | Attempt history, retake, target (`/progress`) |
 | **Reference** | [`mock-data-registry.md`](./mock-data-registry.md) | Every placeholder/mock datum → BE-phase replacement |
+| **Reference** | [`content-authoring-format.md`](./content-authoring-format.md) | Markdown dialect for authoring a new test (spec) |
 | **Ops** | [`deploy.md`](./deploy.md) | Vercel deploy (public, sample-only; Cambridge never deployed) |
 | **Skill spec** | [`features/listening.md`](./features/listening.md) | Play-once audio, single timer |
 | **Skill spec** | [`features/reading.md`](./features/reading.md) | 60-min block, highlight/review tools |
@@ -67,20 +68,28 @@ content never deployed, per [ADR-0006](./architecture/decisions/0006-content-ing
 Auto-deploys on push to `main`. See [`deploy.md`](./deploy.md).
 
 **BE phase — Phases 1–3 done & live:**
-- **Database:** Neon Postgres + Drizzle ORM ([ADR-0003](./architecture/decisions/0003-database.md)).
-  Schema (`profile`/`attempt`/`vocab`, keyed off Clerk's `userId`) migrated to Neon.
+- **Database:** **Supabase** Postgres + Drizzle ORM ([ADR-0009](./architecture/decisions/0009-database-supabase.md),
+  superseding [ADR-0003](./architecture/decisions/0003-database.md)).
+  Schema (`profile`/`attempt`/`vocab`, keyed off Clerk's `userId`) unchanged.
+  ⚠️ **The driver swap is outstanding** — `lib/db/index.ts` still uses Neon's
+  HTTP driver, which cannot reach Supabase. See ADR-0009's migration checklist.
 - **Auth:** **Clerk** (`@clerk/nextjs`) — one-click social + email OTP, hosted in
   our split-screen sign-in shell ([ADR-0002](./architecture/decisions/0002-auth-provider.md)).
   `proxy.ts` middleware; app tables key off Clerk's `userId`. *Guest-first
   preserved.* Currently Clerk **dev** keys (prod instance needed for launch).
 - **Persistence & real-time sync** ([ADR-0007](./architecture/decisions/0007-client-data-sync.md)):
-  signed-in users' vocab/attempts/progress mirror to Neon via auth-guarded server
+  signed-in users' vocab/attempts/progress mirror to Postgres via auth-guarded server
   actions. Attempts hydrate on load (cross-device resume) + debounced
   write-through; guest→account migration on first sign-in. Guests stay local.
 
 **Content ingestion:** seed-anchored ingester
 ([ADR-0006](./architecture/decisions/0006-content-ingestion.md)); Cambridge 15
 Reading Test 1 sittable locally (gitignored, copyright).
+
+**Authored content:** markdown → committed `Test` pipeline specified
+([ADR-0008](./architecture/decisions/0008-authored-content-pipeline.md),
+format in [`content-authoring-format.md`](./content-authoring-format.md)).
+**Parser not yet built** — spec-first, so implementation has a target.
 
 **Next:** server-side scoring/answer-keys (deferred fidelity rule), AI
 band-scoring for W/S, Clerk **production** instance (for public launch), ingestion
