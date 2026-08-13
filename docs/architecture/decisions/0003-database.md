@@ -1,10 +1,11 @@
 # ADR-0003: Database
 
-> Status: **Superseded by [ADR-0009](./0009-database-supabase.md)** (2026-08-13)
-> — the vendor moved to Supabase Postgres. Everything below except the choice of
-> **Neon** still stands: Drizzle ORM, the schema, the repository seam, the
-> content snapshot, and Vercel Blob for Speaking audio.
+> Status: Accepted (BE phase) — Neon Postgres + Drizzle ORM
 > Date: 2026-07-25
+>
+> *Briefly marked superseded on 2026-08-13 by [ADR-0009](./0009-database-supabase.md),
+> which was withdrawn the same day: it recorded a move to Supabase that had never
+> happened. `vercel env ls` confirms Neon. This ADR stands unchanged.*
 
 ## Context
 

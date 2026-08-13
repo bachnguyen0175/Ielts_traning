@@ -15,10 +15,10 @@ an ADR — supersede it with a new one and mark the old as `Superseded`.
 |---|----------|--------|
 | [0001](./0001-tech-stack.md) | Next.js + Vercel + AI SDK | Accepted |
 | [0002](./0002-auth-provider.md) | Auth — Clerk (was Auth.js/Resend) | Accepted |
-| [0003](./0003-database.md) | Database — Neon Postgres + Drizzle ORM | Superseded by 0009 |
+| [0003](./0003-database.md) | Database — Neon Postgres + Drizzle ORM | Accepted |
 | [0004](./0004-attempt-resumability.md) | Attempt resumability | Accepted (resume w/ elapsed-time) |
 | [0005](./0005-repo-structure.md) | Repo structure — pnpm-workspace monorepo (`apps/web`) | Accepted |
 | [0006](./0006-content-ingestion.md) | Cambridge content ingestion (seed-anchored, gitignored output) | Accepted |
 | [0007](./0007-client-data-sync.md) | Client persistence & real-time sync (localStorage + server-action write-through) | Accepted |
 | [0008](./0008-authored-content-pipeline.md) | Authored content pipeline (markdown → committed `Test`) | Accepted (spec) |
-| [0009](./0009-database-supabase.md) | Database — Supabase Postgres (supersedes 0003) | Accepted |
+| [0009](./0009-database-supabase.md) | Database — Supabase Postgres | **Withdrawn** (recorded in error; 0003 stands) |

@@ -1,95 +1,60 @@
-# ADR-0009: Database — Supabase Postgres (supersedes ADR-0003)
+# ADR-0009: Database — Supabase Postgres ~~(supersedes ADR-0003)~~
 
-> Status: Accepted — supersedes [ADR-0003](./0003-database.md)
+> Status: **WITHDRAWN — recorded in error (2026-08-13).**
+> [ADR-0003](./0003-database.md) stands: **Neon Postgres + Drizzle ORM**.
 > Date: 2026-08-13
 
-## Context
+## What happened
 
-[ADR-0003](./0003-database.md) chose **Neon Postgres + Drizzle ORM**, and
-explicitly considered and set aside Supabase — the reasoning being that auth had
-moved to Clerk ([ADR-0002](./0002-auth-provider.md)), so Supabase's bundled auth
-was not needed.
+This ADR was written on the strength of a statement that Supabase had been
+provisioned. It was never verified — the repo has no `.env*` files, and the
+original text said so explicitly, adding that it "should be withdrawn and
+ADR-0003 restored to Accepted" if the premise turned out to be wrong.
 
-That choice has been reversed: **Supabase is now the provisioned database.**
+It was wrong. Checking the deployment settled it:
 
-The application code has not followed. It still targets Neon:
+```
+$ vercel env ls          # project ielts-traning-web-nhgz, 25 variables
+NEON_PROJECT_ID          Production, Preview, Development    19d ago
+NEON_AUTH_BASE_URL       Production, Preview, Development    19d ago
+VITE_NEON_AUTH_URL       Production, Preview, Development    19d ago
+DATABASE_URL             Production, Preview, Development    19d ago
+DATABASE_URL_UNPOOLED    Production, Preview, Development    19d ago
+```
 
-- `apps/web/package.json` depends on `@neondatabase/serverless`
-- `apps/web/src/lib/db/index.ts` builds the client with
-  `drizzle(neon(process.env.DATABASE_URL!))` over `drizzle-orm/neon-http`
-
-That driver speaks Neon's HTTP endpoint, **not** the Postgres wire protocol, so
-it cannot connect to Supabase at all. The app is currently mis-wired against its
-own database.
-
-> **Recorded from a stated decision, not a verified one.** There are no `.env*`
-> files in `apps/web`, so the provisioning could not be confirmed from the repo.
-> If Supabase was not in fact provisioned, this ADR should be withdrawn and
-> ADR-0003 restored to Accepted.
-
-## Decision
-
-**Supabase Postgres with Drizzle ORM**, over the `postgres-js` driver.
-
-- **Supabase** — managed Postgres. Reached over its connection pooler for
-  serverless request handlers, and over a direct connection for migrations.
-- **Drizzle stays.** The ORM, the schema in `apps/web/src/lib/db/schema.ts`, and
-  the checked-in SQL migrations are all unchanged — only the driver beneath them
-  moves. Nothing about ADR-0003's schema reasoning is superseded.
-- **Repository seam unchanged.** `ProfileRepository`, `AttemptRepository`,
-  `VocabRepository` keep their interfaces; screens do not change
-  ([ADR-0007](./0007-client-data-sync.md)).
-- **Clerk remains the auth provider** ([ADR-0002](./0002-auth-provider.md)).
-  Supabase Auth is **not** adopted; app tables continue to key off Clerk's
-  `userId` text column. Supabase is used purely as a Postgres host.
-
-## Alternatives considered
-
-- **Stay on Neon** — zero migration work, and ADR-0003's reasoning still holds
-  (serverless fit, Vercel Marketplace integration auto-injecting the connection
-  string). Rejected only because Supabase is what is now provisioned.
-- **Supabase with its JS client instead of Drizzle** — would discard the typed
-  schema and the migration history for a REST-shaped API. Rejected.
-- **Supabase Auth, replacing Clerk** — would consolidate vendors, but reopens a
-  settled decision and rewrites every auth touchpoint. Rejected; out of scope.
+Three Neon-specific variables, **zero** Supabase variables, and the
+`DATABASE_URL` / `DATABASE_URL_UNPOOLED` pair that ADR-0003 described the Neon
+Vercel Marketplace integration auto-injecting. The database is Neon and has
+been for nineteen days.
 
 ## Consequences
 
-Migration checklist:
+- **Reverted:** commit `5dad3ab` swapped `drizzle-orm/neon-http` for
+  `postgres-js`. Reverted in full — driver, dependency, and config comment.
+- **ADR-0003 restored to Accepted.** Its choice of the Neon HTTP driver is
+  correct and deliberate: stateless, no TCP connection per invocation, which is
+  the right fit for serverless handlers. `postgres-js` would have worked against
+  Neon over the wire protocol, so this was never an outage — but it was a
+  regression against the reasoning ADR-0003 recorded.
+- **Retained, not deleted**, per the rule in [`README.md`](./README.md): an ADR
+  trail that shows a decision made on bad information and then corrected is
+  worth more than one that quietly erases it.
 
-| # | Change | File | Status |
-|---|---|---|---|
-| 1 | Swap driver: `drizzle-orm/neon-http` → `drizzle-orm/postgres-js` | `apps/web/src/lib/db/index.ts` | ✅ done 2026-08-13 |
-| 2 | Drop `@neondatabase/serverless`, add `postgres` | `apps/web/package.json` | ✅ done 2026-08-13 |
-| 3 | Point migrations at the **direct** connection, not the transaction pooler | `apps/web/drizzle.config.ts` | ✅ already correct (`DATABASE_URL_UNPOOLED`); comment updated |
-| 4 | Set `DATABASE_URL` / `DATABASE_URL_UNPOOLED` on Vercel by hand | Vercel env | ⬜ outstanding |
-| 5 | Migrate existing `profile` / `attempt` / `vocab` rows, if any exist on Neon | — | ⬜ outstanding |
+## For next time
 
-Items 1–3 are verified only by build and test — 82 app tests + 26 domain tests
-pass, `next build` succeeds, lint clean. **No connection to a real Supabase
-instance has been made**, because no `.env*` exists locally. The first genuine
-verification is item 4.
+Verify the premise before recording a decision that supersedes an accepted one.
+The check costs one command:
 
-Connection-mode notes that will bite if missed:
+```
+vercel env ls
+```
 
-- Serverless handlers should use the **transaction pooler**; a `postgres-js`
-  client on that mode must be created with prepared statements disabled, because
-  transaction pooling does not support them.
-- **Migrations must not run through the transaction pooler.** Use the direct
-  connection (or session mode). This is the same pooled/unpooled split ADR-0003
-  already assumed, so `DATABASE_URL_UNPOOLED` keeps its meaning.
+Variable *names* are enough to identify a vendor, so nothing secret has to be
+pulled or pasted to answer the question.
 
-Other consequences:
+## If Supabase is ever genuinely adopted
 
-- **The Vercel Marketplace integration no longer manages env vars.** Neon
-  auto-injected the connection string; Supabase credentials are set manually.
-  See [`deploy.md`](../../deploy.md).
-- **`docs/` references to Neon are now historical.** ADR-0003 is superseded but
-  retained — its schema, repository-seam, content-snapshot, and Vercel Blob
-  decisions all still stand; only the vendor changed.
-- **Implementation APIs (Drizzle driver, Supabase connection strings) must be
-  grounded in current docs at build time** — memorized APIs are stale, and the
-  pooler hostnames and ports in particular change.
-- **Follow-up:** until items 1–3 ship, any DB-backed feature is blocked. This
-  includes the deferred content-upload screen discussed in
-  [ADR-0008](./0008-authored-content-pipeline.md).
+Supersede ADR-0003 with a **new** ADR (0010+), not this one. The migration work
+it described was accurate as far as it went — `postgres-js` driver,
+`prepare: false` for the transaction pooler, migrations on the direct
+connection, manual Vercel env vars — and can be lifted from this file's history.

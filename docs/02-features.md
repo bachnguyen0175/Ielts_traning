@@ -28,9 +28,9 @@ repository seam + original sample mock content. **Verification:** ~60 unit/RTL
 tests + 17 E2E, build + lint green.
 
 **BE phase progress:** ✅ **auth** (Clerk — one-click social + email OTP) + ✅ **database**
-(Supabase Postgres + Drizzle, [ADR-0009](./architecture/decisions/0009-database-supabase.md)) + ✅ **Phase 3 persistence & real-time sync**
+(Neon + Drizzle) + ✅ **Phase 3 persistence & real-time sync**
 ([ADR-0007](./architecture/decisions/0007-client-data-sync.md)) — signed-in
-users' vocab/attempts/progress mirror to Postgres (server actions, attempt
+users' vocab/attempts/progress mirror to Neon (server actions, attempt
 hydrate-on-load + debounced write-through, guest→account migration); guests stay
 local. All done & live in prod. **Still deferred:** server-side scoring (fidelity
 rule), AI band-scoring for W/S (RES-6/7, REV-6), live AI examiner (P3), Clerk

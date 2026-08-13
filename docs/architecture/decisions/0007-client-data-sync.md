@@ -2,11 +2,6 @@
 
 > Status: Accepted (BE phase 3)
 > Date: 2026-07-26
->
-> **Note (2026-08-13):** references to *Neon* below read as *Postgres* — the
-> vendor moved to Supabase ([ADR-0009](./0009-database-supabase.md)). This
-> decision is unaffected: the sync strategy is driver-agnostic. Text left as
-> written, since an ADR records what was decided at the time.
 
 ## Context
 

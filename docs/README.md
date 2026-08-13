@@ -68,19 +68,16 @@ content never deployed, per [ADR-0006](./architecture/decisions/0006-content-ing
 Auto-deploys on push to `main`. See [`deploy.md`](./deploy.md).
 
 **BE phase — Phases 1–3 done & live:**
-- **Database:** **Supabase** Postgres + Drizzle ORM ([ADR-0009](./architecture/decisions/0009-database-supabase.md),
-  superseding [ADR-0003](./architecture/decisions/0003-database.md)).
-  Schema (`profile`/`attempt`/`vocab`, keyed off Clerk's `userId`) unchanged.
-  Driver swapped to `postgres-js` (`prepare: false` for the transaction pooler).
-  ⚠️ **Vercel env vars still point at Neon** — set `DATABASE_URL` /
-  `DATABASE_URL_UNPOOLED` to the Supabase strings, and migrate any existing rows.
-  See ADR-0009's migration checklist.
+- **Database:** Neon Postgres + Drizzle ORM ([ADR-0003](./architecture/decisions/0003-database.md)).
+  Schema (`profile`/`attempt`/`vocab`, keyed off Clerk's `userId`) migrated to Neon.
+  *(A same-day move to Supabase was recorded and reverted — see
+  [ADR-0009, withdrawn](./architecture/decisions/0009-database-supabase.md).)*
 - **Auth:** **Clerk** (`@clerk/nextjs`) — one-click social + email OTP, hosted in
   our split-screen sign-in shell ([ADR-0002](./architecture/decisions/0002-auth-provider.md)).
   `proxy.ts` middleware; app tables key off Clerk's `userId`. *Guest-first
   preserved.* Currently Clerk **dev** keys (prod instance needed for launch).
 - **Persistence & real-time sync** ([ADR-0007](./architecture/decisions/0007-client-data-sync.md)):
-  signed-in users' vocab/attempts/progress mirror to Postgres via auth-guarded server
+  signed-in users' vocab/attempts/progress mirror to Neon via auth-guarded server
   actions. Attempts hydrate on load (cross-device resume) + debounced
   write-through; guest→account migration on first sign-in. Guests stay local.
 
