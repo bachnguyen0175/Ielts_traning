@@ -6,7 +6,6 @@ import { importedTests } from "@/lib/data/imported-tests";
 import { summarize } from "@/lib/data/local";
 import { Button } from "@/components/ui/button";
 import { Card, CardBody } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
 import {
   HeadphonesIcon,
@@ -41,22 +40,15 @@ function TestCard({ test }: { test: TestSummary }) {
   return (
     <Card className="group flex h-full flex-col transition-all duration-200 hover:border-foreground/20 hover:shadow-lg">
       <CardBody className="flex flex-1 flex-col">
-        <div className="flex items-start justify-between gap-3">
-          <div className="min-w-0">
-            {test.source && (
-              <p className="text-xs font-medium uppercase tracking-[0.12em] text-muted-foreground">
-                {test.source}
-              </p>
-            )}
-            <h3 className="mt-1.5 font-serif text-lg font-semibold leading-snug tracking-tight text-foreground">
-              {test.title}
-            </h3>
-          </div>
-          {test.access === "private" && (
-            <Badge tone="neutral" className="shrink-0">
-              Private
-            </Badge>
+        <div className="min-w-0">
+          {test.source && (
+            <p className="text-xs font-medium uppercase tracking-[0.12em] text-muted-foreground">
+              {test.source}
+            </p>
           )}
+          <h3 className="mt-1.5 font-serif text-lg font-semibold leading-snug tracking-tight text-foreground">
+            {test.title}
+          </h3>
         </div>
 
         <div className="mt-4 flex flex-wrap gap-1.5">

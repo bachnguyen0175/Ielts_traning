@@ -67,12 +67,11 @@ describe("front matter", () => {
     expect(errorsOf(diagnostics)).toContain('test id "t1" already exists');
   });
 
-  it("defaults type to academic and carries source/access", () => {
+  it("defaults type to academic and carries source", () => {
     const { test } = parseMarkdown(`---
 id: t1
 title: T
 source: Composed original
-access: private
 ---
 
 ## Reading
@@ -88,7 +87,6 @@ Write one word.
 `);
     expect(test?.type).toBe("academic");
     expect(test?.source).toBe("Composed original");
-    expect(test?.access).toBe("private");
   });
 });
 

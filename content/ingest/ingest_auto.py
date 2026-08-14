@@ -294,7 +294,6 @@ def build_test(passages: list[dict], volume: int, test: int) -> dict:
         "title": f"Cambridge IELTS {volume} — Academic Test {test}",
         "type": "academic",
         "source": f"Cambridge IELTS {volume}",
-        "access": "private",
         "sections": [{
             "id": f"cam{volume}-t{test}-reading",
             "skill": "reading",

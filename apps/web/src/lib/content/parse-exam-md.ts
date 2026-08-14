@@ -381,7 +381,6 @@ export function parseExamMarkdown(source: string): ExamParseResult {
       type: "academic",
       sections: [section],
       source: "Imported",
-      access: "private",
     },
     diagnostics,
   };

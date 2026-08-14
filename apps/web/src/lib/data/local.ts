@@ -53,7 +53,6 @@ export function summarize(t: Test): TestSummary {
     totalQuestions,
     durationMinutes,
     source: t.source,
-    access: t.access,
   };
 }
 

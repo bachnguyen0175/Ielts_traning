@@ -13,7 +13,6 @@ const tests: TestSummary[] = [
     totalQuestions: 12,
     durationMinutes: 40,
     source: "Composed original",
-    access: "public",
   },
   {
     id: "cam15-reading",
@@ -23,7 +22,6 @@ const tests: TestSummary[] = [
     totalQuestions: 40,
     durationMinutes: 60,
     source: "Cambridge IELTS 15",
-    access: "private",
   },
 ];
 
@@ -38,11 +36,10 @@ describe("TestCatalog", () => {
     expect(start).toHaveAttribute("href", "/mock?test=cam15-reading");
   });
 
-  it("flags private (Cambridge-derived) tests", () => {
+  it("shows where each test came from", () => {
     importedTests.reset(); // storage was written directly, not via save()
 
     render(<TestCatalog tests={tests} />);
-    expect(screen.getByText(/^private$/i)).toBeInTheDocument();
     expect(screen.getByText(/cambridge ielts 15/i)).toBeInTheDocument();
   });
 
@@ -62,7 +59,6 @@ describe("TestCatalog — imported tests", () => {
           title: "Imported Reading Paper",
           type: "academic",
           source: "Imported",
-          access: "private",
           sections: [
             {
               id: "s-reading",

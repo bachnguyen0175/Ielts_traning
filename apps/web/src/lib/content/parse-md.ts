@@ -436,9 +436,7 @@ export function parseMarkdown(
     sections,
   };
   const source_ = front.get("source")?.value;
-  const access = front.get("access")?.value;
   if (source_) test.source = source_;
-  if (access === "public" || access === "private") test.access = access;
 
   return { test, diagnostics };
 }

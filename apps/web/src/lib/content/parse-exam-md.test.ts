@@ -123,8 +123,7 @@ describe("parseExamMarkdown", () => {
     expect(s.rules).toEqual({ singleTimer: true, autoAdvanceOnExpiry: true });
   });
 
-  it("marks imported content private so it is never treated as shippable", () => {
-    expect(test!.access).toBe("private");
+  it("marks the test as imported", () => {
     expect(test!.source).toBe("Imported");
   });
 

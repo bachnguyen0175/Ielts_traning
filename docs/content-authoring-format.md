@@ -43,7 +43,6 @@ id: composed-academic-2
 title: Composed Academic Mock 2
 type: academic
 source: Composed original
-access: public
 ---
 
 ## Listening
@@ -118,10 +117,6 @@ Opens the file, delimited by `---`. Produces the `Test`.
 | `title` | **yes** | free text | `Test.title` |
 | `type` | no | `academic` (default) · `general` | `Test.type` |
 | `source` | no | free text, e.g. `Composed original` | `Test.source` |
-| `access` | no | `public` (default) · `private` | `Test.access` |
-
-`access: private` marks content that must never be deployed. Original content
-you own is `public`.
 
 ---
 
@@ -426,7 +421,6 @@ id: composed-reading-1
 title: Composed Reading Drill 1
 type: academic
 source: Composed original
-access: public
 ---
 
 ## Reading

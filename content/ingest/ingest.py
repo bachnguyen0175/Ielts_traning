@@ -107,7 +107,6 @@ def merge(seed: dict, parsed: list[dict]) -> tuple[dict, list]:
     test = {
         "id": seed["test"]["id"], "title": seed["test"]["title"], "type": "academic",
         "source": f"Cambridge IELTS {seed['test'].get('version', '').split('-')[-1]}".strip(),
-        "access": "private",
         "sections": [{k: v for k, v in sec.items() if k != "testId"}],
     }
     return test, mism

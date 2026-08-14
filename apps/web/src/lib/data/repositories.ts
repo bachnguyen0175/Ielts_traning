@@ -14,7 +14,6 @@ export interface TestSummary {
   totalQuestions: number;
   durationMinutes: number;
   source?: string;
-  access?: "public" | "private";
 }
 
 /**

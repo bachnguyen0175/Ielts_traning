@@ -11,7 +11,6 @@ export const SAMPLE_MOCK: Test = {
   title: "Composed Sample — Academic Mock 1",
   type: "academic",
   source: "Composed original",
-  access: "public",
   sections: [
     // ── Listening ──────────────────────────────────────────────────────────
     {
