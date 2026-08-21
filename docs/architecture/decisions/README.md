@@ -22,3 +22,4 @@ an ADR — supersede it with a new one and mark the old as `Superseded`.
 | [0008](./0008-authored-content-pipeline.md) | Authored content pipeline (markdown → committed `Test`) | Accepted |
 | [0009](./0009-database-supabase.md) | Database — Supabase Postgres | **Withdrawn** (recorded in error; 0003 stands) |
 | [0010](./0010-app-shell-and-ui-foundation.md) | App shell (`AppShell` / `FocusShell`) + UI primitives | Accepted |
+| [0011](./0011-question-presentation-in-the-data-model.md) | Question presentation belongs in the data model (options, tables, paragraph labels) | Accepted |

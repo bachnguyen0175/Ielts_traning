@@ -39,6 +39,10 @@ A complete mock. `type` fixed to `academic` for now.
 
 ### Passage (reading) / Part (listening)
 - `id`, `sectionId`, `order`, `title`, `body` (prose / audio ref)
+- in `body`, paragraphs are separated by a blank line, and a paragraph that is
+  a single capital letter is the **printed label** of the paragraph after it.
+  "Which paragraph contains…" questions point at those labels, so the player
+  renders them.
 - has many **QuestionGroup**
 
 ### QuestionGroup
@@ -46,8 +50,17 @@ Groups questions that share an instruction and (often) an option list — this
 mirrors how real tests present "Questions 14–18" as one block.
 - `id`, `order`, `range` `[from, to]`, `type` (see enum below)
 - `instruction` (verbatim rubric shown to the candidate)
-- `sharedOptions?` (e.g. paragraph letters A–G, list of headings/features)
-- `optionsReusable?` (bool — "you may use any letter more than once")
+- `sharedOptions?` — `{ label, text? }[]`. `label` is the letter or roman
+  numeral the candidate answers with; `text` is the option as printed
+  ("A  Kanayo F. Nwanze"). Groups whose letters are only implied by the rubric
+  ("paragraphs A-I") carry a label with no text. The player prints a list with
+  text once per group, then offers bare labels per question.
+- `optionsReusable?` (bool — "you may use any letter more than once"). When
+  absent on a `letter` group, the player dims letters already spent elsewhere
+  in the group.
+- `table?` — `string[][]`, for table completion. Rows of cells; the first row
+  is a header when it holds no blanks. A cell marks question *n*'s blank with
+  the token `[[n]]`, and the player renders an input in its place.
 - `answerMatch` (matching policy for the whole group — see below)
 - has many **Question**
 

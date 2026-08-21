@@ -223,7 +223,7 @@ reusable: yes
 
 | Key | Applies to | Grammar | Maps to |
 |---|---|---|---|
-| `options` | letter-based types | `A \| B \| C` | `sharedOptions` |
+| `options` | letter-based types | `A \| B \| C` | `sharedOptions` (as `{label}`, no option text) |
 | `reusable` | matching types | `yes` · `no` | `optionsReusable` |
 | `select` | `multiple_choice_multi` | integer | `selectCount` |
 | `answers` | `multiple_choice_multi` | `B, D` | `acceptSet` |
