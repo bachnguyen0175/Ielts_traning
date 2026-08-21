@@ -561,7 +561,7 @@ function buildGroup(
     range: [from, to],
     type,
     instruction: rg.instruction.join(" ").trim(),
-    ...(options ? { sharedOptions: options } : {}),
+    ...(options ? { sharedOptions: options.map((label) => ({ label })) } : {}),
     ...(rg.attrs.get("reusable")?.value === "yes"
       ? { optionsReusable: true }
       : {}),

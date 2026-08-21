@@ -1,5 +1,6 @@
 import type {
   AnswerMatch,
+  Option,
   Passage,
   Question,
   QuestionGroup,
@@ -54,6 +55,36 @@ function slugify(s: string): string {
 }
 
 const ROMAN = /^(?:i|ii|iii|iv|v|vi|vii|viii|ix|x|xi|xii|xiii|xiv|xv)$/i;
+
+/** A printed dotted leader, i.e. the blank a candidate writes into. */
+const LEADER = /\s*(?:[….]{3,}|_{3,})\s*/g;
+
+/** A numbered blank inside a table cell: "27……………" */
+const CELL_BLANK = /(\d{1,2})\s*(?:[….]{3,}|_{3,})/g;
+
+/** Replaces printed leaders with the app's blank marker. */
+function withBlanks(s: string): string {
+  return s.replace(LEADER, " ___ ").replace(/\s+/g, " ").replace(/\s+([.,;:?!])/g, "$1").trim();
+}
+
+/** Page furniture that carries no exam content. */
+function isFurniture(text: string): boolean {
+  return /^#+$/.test(text) || /^advertisements?$/i.test(text) || /^\*+$/.test(text);
+}
+
+/** Splits a markdown table row into cells; null when the line is not a row, or
+ *  is a separator/spacer row carrying no text. */
+function tableCells(raw: string): string[] | null {
+  const t = raw.trim();
+  if (!t.startsWith("|")) return null;
+  const cells = t
+    .replace(/^\|/, "")
+    .replace(/\|$/, "")
+    .split("|")
+    .map((c) => plain(c));
+  if (cells.every((c) => c === "" || /^:?-{2,}:?$/.test(c))) return null;
+  return cells;
+}
 
 // ── Question-type inference ──────────────────────────────────────────────────
 
@@ -124,6 +155,20 @@ function matchFor(type: QuestionType): AnswerMatch {
   return { kind: "text", normalize: ["trim", "collapse-ws", "lowercase"] };
 }
 
+/** Types whose options are printed as a list beside their letters. */
+const LISTED_TYPES = new Set<QuestionType>([
+  "matching_features",
+  "matching_headings",
+  "multiple_choice_single",
+  "multiple_choice_multi",
+]);
+
+/** Types that point at a paragraph by its printed label. */
+const BY_PARAGRAPH = new Set<QuestionType>([
+  "matching_information",
+  "matching_headings",
+]);
+
 // ── Raw scan ─────────────────────────────────────────────────────────────────
 
 interface RawGroup {
@@ -133,6 +178,9 @@ interface RawGroup {
   instruction: string[];
   stems: Map<number, string>;
   options: { label: string; text: string }[];
+  tableRows: string[][];
+  /** last stem seen, so a stem that wraps onto the next line can continue */
+  lastStem: number | null;
 }
 
 interface RawPassage {
@@ -217,6 +265,8 @@ export function parseExamMarkdown(source: string): ExamParseResult {
           instruction: [],
           stems: new Map(),
           options: [],
+          tableRows: [],
+          lastStem: null,
         };
         passage.groups.push(group);
         awaitingTitle = false;
@@ -234,12 +284,20 @@ export function parseExamMarkdown(source: string): ExamParseResult {
 
     // ── Body lines ──
     if (group) {
+      if (isFurniture(text)) continue;
+      // A table completion prints its blanks inside a markdown table. Keep the
+      // rows as rows: flattened into the instruction they are unreadable.
+      if (raw.trim().startsWith("|")) {
+        const cells = tableCells(raw);
+        if (cells) group.tableRows.push(cells);
+        continue; // spacer and separator rows carry nothing, but are not prose
+      }
       // "**A**     Kanayo F. Nwanze"  /  "**i**   Different accounts".
       // Matched on spacing-preserved text: the wide gap is what marks an
       // option line apart from prose that merely starts with a capital.
       const opt = /^([A-Z]|[ivxIVX]+)\s{2,}(.+)$/.exec(unmark(raw));
       if (opt && (opt[1].length === 1 || ROMAN.test(opt[1]))) {
-        group.options.push({ label: opt[1], text: opt[2].trim() });
+        group.options.push({ label: opt[1], text: plain(opt[2]) });
         continue;
       }
       // "**1**   a reference to characteristics..."
@@ -247,20 +305,28 @@ export function parseExamMarkdown(source: string): ExamParseResult {
       if (stem) {
         const n = Number(stem[1]);
         if (n >= group.from && n <= group.to) {
-          group.stems.set(n, stem[2].trim());
+          group.stems.set(n, withBlanks(stem[2]));
+          group.lastStem = n;
           continue;
         }
       }
-      // Bare option list header ("List of People") or instruction prose.
-      if (!/^list of/i.test(text)) group.instruction.push(text);
+      if (/^list of/i.test(text)) continue;
+      // Once stems have started, loose prose is the tail of a stem that wrapped
+      // onto another line, not more instruction.
+      if (group.lastStem !== null) {
+        const head = group.stems.get(group.lastStem) ?? "";
+        group.stems.set(group.lastStem, withBlanks(`${head} ${text}`));
+        continue;
+      }
+      group.instruction.push(text);
       continue;
     }
 
     if (passage) {
-      // A lone letter is a paragraph label; keep prose only.
-      if (/^[A-Z]$/.test(text)) continue;
       if (/^you should spend/i.test(text)) continue;
-      if (/^advertisements?$/i.test(text)) continue;
+      if (isFurniture(text)) continue;
+      // A lone letter is the paragraph's printed label. Keep it: "which
+      // paragraph contains…" questions are unanswerable without it.
       passage.paragraphs.push(text);
       continue;
     }
@@ -283,13 +349,18 @@ export function parseExamMarkdown(source: string): ExamParseResult {
       warn(rp.line, `passage ${rp.number} has no body text`);
     }
 
+    // The printed paragraph labels, which paragraph-matching questions point at.
+    const paragraphLabels = rp.paragraphs.filter((t) => /^[A-Z]$/.test(t));
+
     const groups: QuestionGroup[] = rp.groups.map((rg, gi) => {
       const instruction = rg.instruction.join(" ").trim();
       const guess = guessType(
         `${instruction} ${rg.options.map((o) => o.text).join(" ")}`,
         rg.options.length
       );
-      let sharedOptions = rg.options.map((o) => o.label);
+      let sharedOptions: Option[] = rg.options.map((o) =>
+        o.text ? { label: o.label, text: o.text } : { label: o.label }
+      );
       // Paragraph-matching groups rarely print a list; they state the span in
       // prose ("Reading Passage 1 has nine paragraphs, A-I"). Expand it.
       if (sharedOptions.length === 0) {
@@ -298,17 +369,38 @@ export function parseExamMarkdown(source: string): ExamParseResult {
           const from = span[1].charCodeAt(0);
           const to = span[2].charCodeAt(0);
           if (to > from && to - from < 26) {
-            sharedOptions = Array.from({ length: to - from + 1 }, (_, k) =>
-              String.fromCharCode(from + k)
-            );
+            sharedOptions = Array.from({ length: to - from + 1 }, (_, k) => ({
+              label: String.fromCharCode(from + k),
+            }));
           }
         }
       }
       const width = rg.to - rg.from + 1;
       const isLetterSet = guess.type === "multiple_choice_multi";
 
+      // Table completion: mark each numbered blank, and take the cell it sits
+      // in as that question's stem.
+      const table =
+        rg.tableRows.length > 0
+          ? rg.tableRows.map((row) =>
+              row.map((cell) => cell.replace(CELL_BLANK, (_, n) => `[[${n}]]`))
+            )
+          : null;
+      const tableStems = new Map<number, string>();
+      for (const row of table ?? []) {
+        for (const cell of row) {
+          for (const m of cell.matchAll(/\[\[(\d+)\]\]/g)) {
+            tableStems.set(
+              Number(m[1]),
+              cell.replace(/\[\[\d+\]\]/g, "___")
+            );
+          }
+        }
+      }
+
       const questions: Question[] = [];
       const acceptSet: string[] = [];
+      const noStem: number[] = [];
       for (let n = rg.from; n <= rg.to; n += 1) {
         const answer = answers.get(n);
         if (answer === undefined) {
@@ -319,11 +411,25 @@ export function parseExamMarkdown(source: string): ExamParseResult {
           questions.push({ number: n, acceptSetMember: true });
         } else {
           const q: Question = { number: n };
-          const stem = rg.stems.get(n);
+          const stem = rg.stems.get(n) ?? tableStems.get(n);
           if (stem) q.content = stem;
+          else noStem.push(n);
           if (answer) q.accept = [answer];
           questions.push(q);
         }
+      }
+
+      // ── Answerability ──
+      // A question a candidate cannot answer scores zero however good the
+      // answer key is, so these are worth saying out loud at import time.
+      if (noStem.length > 0) {
+        warn(rg.line, `question ${noStem.join(", ")} has no text — the player will show a bare number`);
+      }
+      if (LISTED_TYPES.has(guess.type) && sharedOptions.every((opt) => !opt.text)) {
+        warn(rg.line, `questions ${rg.from}-${rg.to} offer letters with nothing beside them — the printed list of options was not found`);
+      }
+      if (BY_PARAGRAPH.has(guess.type) && paragraphLabels.length === 0) {
+        warn(rg.line, `questions ${rg.from}-${rg.to} ask about lettered paragraphs, but passage ${rp.number} has no paragraph labels`);
       }
 
       const group: QuestionGroup = {
@@ -337,6 +443,7 @@ export function parseExamMarkdown(source: string): ExamParseResult {
         questions,
         ...(isLetterSet ? { selectCount: guess.selectCount ?? width } : {}),
         ...(isLetterSet ? { acceptSet } : {}),
+        ...(table ? { table } : {}),
       };
       return group;
     });

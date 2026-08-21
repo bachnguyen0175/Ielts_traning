@@ -32,7 +32,7 @@ export const SAMPLE_MOCK: Test = {
               range: [1, 3],
               type: "multiple_choice_single",
               instruction: "Choose the correct letter, A, B or C.",
-              sharedOptions: ["A", "B", "C"],
+              sharedOptions: [{ label: "A" }, { label: "B" }, { label: "C" }],
               answerMatch: { kind: "letter" },
               questions: [
                 { number: 1, content: "The pottery class runs on", accept: ["B"] },

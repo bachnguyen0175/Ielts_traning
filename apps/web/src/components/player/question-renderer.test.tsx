@@ -9,7 +9,7 @@ const mcq: QuestionGroup = {
   range: [1, 1],
   type: "multiple_choice_single",
   instruction: "Choose A, B or C.",
-  sharedOptions: ["A", "B", "C"],
+  sharedOptions: [{ label: "A" }, { label: "B" }, { label: "C" }],
   answerMatch: { kind: "letter" },
   questions: [{ number: 1, content: "The class runs on" }],
 };
@@ -30,6 +30,58 @@ const tfng: QuestionGroup = {
   instruction: "TRUE/FALSE/NOT GIVEN",
   answerMatch: { kind: "enum", options: ["TRUE", "FALSE", "NOT GIVEN"] },
   questions: [{ number: 7, content: "Some rivers could not support fish." }],
+};
+
+const matching: QuestionGroup = {
+  id: "g",
+  range: [1, 2],
+  type: "matching_features",
+  instruction: "Match each statement with the correct person.",
+  sharedOptions: [
+    { label: "A", text: "Rivers Trust" },
+    { label: "B", text: "City Council" },
+  ],
+  answerMatch: { kind: "letter" },
+  questions: [
+    { number: 1, content: "Regulation drove the recovery." },
+    { number: 2, content: "Volunteers did the work." },
+  ],
+};
+
+const letterSet: QuestionGroup = {
+  id: "g",
+  range: [5, 6],
+  type: "multiple_choice_multi",
+  instruction: "Choose TWO letters, A-C.",
+  sharedOptions: [
+    { label: "A", text: "waste treatment" },
+    { label: "B", text: "road building" },
+    { label: "C", text: "channel clearing" },
+  ],
+  answerMatch: { kind: "letter-set", anyOrder: true },
+  selectCount: 2,
+  acceptSet: ["A", "C"],
+  questions: [
+    { number: 5, acceptSetMember: true },
+    { number: 6, acceptSetMember: true },
+  ],
+};
+
+const table: QuestionGroup = {
+  id: "g",
+  range: [9, 10],
+  type: "summary_completion",
+  instruction: "Complete the table below.",
+  answerMatch: { kind: "text" },
+  table: [
+    ["Stage", "Result"],
+    ["Regulation of [[9]] discharge", "Water quality improved"],
+    ["Clearing of the channels", "Shelter returned, and [[10]] came back"],
+  ],
+  questions: [
+    { number: 9, content: "Regulation of ___ discharge" },
+    { number: 10, content: "Shelter returned, and ___ came back" },
+  ],
 };
 
 describe("QuestionRenderer", () => {
@@ -54,6 +106,66 @@ describe("QuestionRenderer", () => {
     render(<QuestionRenderer group={tfng} responses={{}} onAnswer={onAnswer} />);
     await userEvent.click(screen.getByRole("radio", { name: /^false$/i }));
     expect(onAnswer).toHaveBeenCalledWith(7, "FALSE");
+  });
+
+  it("prints the option list once, then takes a letter per question", async () => {
+    const onAnswer = vi.fn();
+    render(
+      <QuestionRenderer group={matching} responses={{}} onAnswer={onAnswer} />
+    );
+    // The names appear once, not once under every statement.
+    expect(screen.getAllByText("Rivers Trust")).toHaveLength(1);
+    expect(screen.getAllByRole("radio", { name: "B" })).toHaveLength(2);
+    await userEvent.click(screen.getAllByRole("radio", { name: "B" })[0]);
+    expect(onAnswer).toHaveBeenCalledWith(1, "B");
+  });
+
+  it("marks a single-use letter as already used elsewhere in the group", () => {
+    render(
+      <QuestionRenderer group={matching} responses={{ 1: "A" }} onAnswer={() => {}} />
+    );
+    // Question 2 still offers A, but says it is spent.
+    expect(screen.getByRole("radio", { name: /A \(already used\)/ })).toBeInTheDocument();
+  });
+
+  it("letter-set: one choice per group, filling the answer boxes in turn", async () => {
+    const onAnswer = vi.fn();
+    render(
+      <QuestionRenderer group={letterSet} responses={{}} onAnswer={onAnswer} />
+    );
+    expect(screen.getAllByRole("checkbox")).toHaveLength(3);
+    expect(screen.getByText("0 of 2 selected")).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("checkbox", { name: "C" }));
+    expect(onAnswer).toHaveBeenCalledWith(5, "C");
+  });
+
+  it("letter-set: stops at the limit and lets a choice be taken back", async () => {
+    const onAnswer = vi.fn();
+    render(
+      <QuestionRenderer
+        group={letterSet}
+        responses={{ 5: "A", 6: "C" }}
+        onAnswer={onAnswer}
+      />
+    );
+    expect(screen.getByText("2 of 2 selected")).toBeInTheDocument();
+    expect(screen.getByRole("checkbox", { name: "B" })).toBeDisabled();
+    await userEvent.click(screen.getByRole("checkbox", { name: "A" }));
+    expect(onAnswer).toHaveBeenCalledWith(5, "");
+  });
+
+  it("table completion: renders the table with an input at each blank", () => {
+    const onAnswer = vi.fn();
+    render(<QuestionRenderer group={table} responses={{}} onAnswer={onAnswer} />);
+    expect(screen.getByRole("columnheader", { name: "Stage" })).toBeInTheDocument();
+    expect(screen.getByText(/Regulation of/)).toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText(/question 10/i), {
+      target: { value: "wildlife" },
+    });
+    expect(onAnswer).toHaveBeenCalledWith(10, "wildlife");
+    // The raw markdown never reaches the screen.
+    expect(screen.queryByText(/\[\[/)).toBeNull();
+    expect(screen.queryByText(/\| ---/)).toBeNull();
   });
 
   it("reflects an existing response as selected/filled", () => {

@@ -39,12 +39,23 @@ export interface Question {
   acceptSetMember?: boolean;
 }
 
+/**
+ * One selectable option in a group's shared list. Papers print these as a
+ * lettered list ("A  Kanayo F. Nwanze"); `text` is that printed text. Groups
+ * whose letters are implied rather than printed (paragraph matching, where the
+ * instruction says "paragraphs A-I") carry a label with no text.
+ */
+export interface Option {
+  label: string;
+  text?: string;
+}
+
 export interface QuestionGroup {
   id: string;
   range: [number, number];
   type: QuestionType;
   instruction: string;
-  sharedOptions?: string[];
+  sharedOptions?: Option[];
   optionsReusable?: boolean;
   answerMatch: AnswerMatch;
   questions: Question[];
@@ -52,13 +63,23 @@ export interface QuestionGroup {
   selectCount?: number;
   /** letter-set: the accepted set of letters (order-independent) */
   acceptSet?: string[];
+  /**
+   * Table-completion layout: rows of cells, first row is a header when it holds
+   * no blanks. A cell marks question n's blank with the token `[[n]]`.
+   */
+  table?: string[][];
 }
 
 export interface Passage {
   id: string;
   order: number;
   title: string;
-  /** prose or audio reference; may be a placeholder in reference seeds */
+  /**
+   * Prose or audio reference; may be a placeholder in reference seeds.
+   * Paragraphs are separated by a blank line. A paragraph that is a single
+   * capital letter is the printed label of the paragraph that follows it, which
+   * is what "which paragraph contains…" questions refer to.
+   */
   body?: string;
   bodyRef?: string;
   questionGroups: QuestionGroup[];

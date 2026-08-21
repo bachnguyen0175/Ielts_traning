@@ -1,114 +1,425 @@
 "use client";
 
-import type { QuestionGroup } from "@composed/domain";
+import type { Option, QuestionGroup } from "@composed/domain";
 import { cx } from "@/lib/cx";
 
-function optionsFor(group: QuestionGroup): string[] | null {
+function optionsFor(group: QuestionGroup): Option[] | null {
   const m = group.answerMatch;
-  if (m.kind === "enum") return m.options;
+  if (m.kind === "enum") return m.options.map((label) => ({ label }));
   if (m.kind === "letter" || m.kind === "letter-set") {
-    return group.sharedOptions ?? ["A", "B", "C", "D"];
+    return (
+      group.sharedOptions ??
+      ["A", "B", "C", "D"].map((label) => ({ label }))
+    );
   }
   return null; // text input
 }
 
-export function QuestionRenderer({
-  group,
-  responses,
-  onAnswer,
-  disabled,
-}: {
+interface RendererProps {
   group: QuestionGroup;
   responses: Record<number, string>;
   onAnswer: (questionNumber: number, value: string) => void;
   disabled?: boolean;
+}
+
+export function QuestionRenderer(props: RendererProps) {
+  const { group } = props;
+  // A table completion prints its blanks inside the table, so the table *is*
+  // the question list.
+  if (group.table) return <TableCompletion {...props} />;
+  // "Choose TWO letters, A-E" is one choice filling several answer boxes, not
+  // one choice per box.
+  if (group.answerMatch.kind === "letter-set") return <LetterSet {...props} />;
+  return <QuestionList {...props} numbers={group.questions.map((q) => q.number)} />;
+}
+
+// ── Shared pieces ────────────────────────────────────────────────────────────
+
+function NumberChip({
+  n,
+  answered,
+  className,
+}: {
+  n: number;
+  answered: boolean;
+  className?: string;
 }) {
+  return (
+    <span
+      className={cx(
+        "grid h-6 w-6 shrink-0 place-items-center rounded-md text-xs font-semibold tabular-nums transition-colors duration-200",
+        answered
+          ? "bg-primary text-primary-foreground"
+          : "bg-muted text-muted-foreground",
+        className,
+      )}
+    >
+      {n}
+    </span>
+  );
+}
+
+function AnswerInput({
+  n,
+  value,
+  onAnswer,
+  disabled,
+  className,
+  placeholder = "Type your answer",
+}: {
+  n: number;
+  value: string;
+  onAnswer: (n: number, v: string) => void;
+  disabled?: boolean;
+  className?: string;
+  placeholder?: string;
+}) {
+  return (
+    <input
+      type="text"
+      aria-label={`Question ${n}`}
+      value={value}
+      disabled={disabled}
+      onChange={(e) => onAnswer(n, e.target.value)}
+      className={cx(
+        "rounded-xl border bg-card px-3.5 py-2.5 text-foreground outline-none",
+        "transition-colors duration-200 placeholder:text-muted-foreground/70",
+        "focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40 disabled:opacity-60",
+        value !== "" ? "border-primary/50" : "border-border",
+        className,
+      )}
+      placeholder={placeholder}
+    />
+  );
+}
+
+function OptionButton({
+  option,
+  id,
+  name,
+  type,
+  selected,
+  used,
+  disabled,
+  onSelect,
+}: {
+  option: Option;
+  id: string;
+  name: string;
+  type: "radio" | "checkbox";
+  selected: boolean;
+  used?: boolean;
+  disabled?: boolean;
+  onSelect: () => void;
+}) {
+  return (
+    <label
+      htmlFor={id}
+      className={cx(
+        // 44px min touch target — options are the most-tapped control in the
+        // whole app.
+        "inline-flex min-h-11 cursor-pointer items-center gap-3 rounded-xl border px-4 text-sm font-medium",
+        "transition-all duration-150 has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-ring has-[:focus-visible]:ring-offset-2 has-[:focus-visible]:ring-offset-background",
+        option.text ? "py-2.5 text-left" : "justify-center",
+        selected
+          ? "border-primary bg-primary text-primary-foreground shadow-sm"
+          : "border-border bg-card text-muted-foreground hover:border-primary/40 hover:text-foreground",
+        !selected && used && "opacity-50",
+        disabled && "pointer-events-none opacity-60",
+      )}
+    >
+      <input
+        id={id}
+        type={type}
+        name={name}
+        value={option.label}
+        checked={selected}
+        disabled={disabled}
+        aria-label={
+          used && !selected ? `${option.label} (already used)` : option.label
+        }
+        onChange={onSelect}
+        className="sr-only"
+      />
+      <span className={cx("font-semibold", option.text && "shrink-0")}>
+        {option.label}
+      </span>
+      {option.text && (
+        <span className={cx("font-normal", selected ? "" : "text-foreground")}>
+          {option.text}
+        </span>
+      )}
+    </label>
+  );
+}
+
+/**
+ * The group's option list, printed once. Papers print it once and then take
+ * only a letter per question; repeating it under every statement buries them.
+ */
+function OptionKey({ options }: { options: Option[] }) {
+  return (
+    <dl className="grid gap-x-6 gap-y-1.5 rounded-xl border border-border bg-muted/40 px-4 py-3 text-sm sm:grid-cols-2">
+      {options.map((opt) => (
+        <div key={opt.label} className="flex gap-2.5">
+          <dt className="w-6 shrink-0 font-semibold text-foreground">
+            {opt.label}
+          </dt>
+          <dd className="text-foreground">{opt.text}</dd>
+        </div>
+      ))}
+    </dl>
+  );
+}
+
+// ── One choice (or one text answer) per question ─────────────────────────────
+
+function QuestionList({
+  group,
+  numbers,
+  responses,
+  onAnswer,
+  disabled,
+}: RendererProps & { numbers: number[] }) {
   const options = optionsFor(group);
+  const showKey = options?.some((o) => o.text) ?? false;
+  // A matching group whose letters are used once each: dim the ones already
+  // spent so the candidate can see what is left.
+  const singleUse = group.answerMatch.kind === "letter" && !group.optionsReusable;
 
   return (
-    <ol className="space-y-6">
-      {group.questions.map((q) => {
-        const answer = responses[q.number];
-        const answered = answer != null && answer !== "";
+    <div className="space-y-5">
+      {showKey && <OptionKey options={options!} />}
+      <ol className="space-y-6">
+        {group.questions
+          .filter((q) => numbers.includes(q.number))
+          .map((q) => {
+            const answer = responses[q.number];
+            const answered = answer != null && answer !== "";
 
-        return (
-          <li key={q.number} className="space-y-3">
-            <div className="flex gap-3">
-              <span
-                className={cx(
-                  "mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-md text-xs font-semibold tabular-nums transition-colors duration-200",
-                  answered
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-muted text-muted-foreground",
-                )}
-              >
-                {q.number}
-              </span>
-              {q.content && (
-                <p className="leading-relaxed text-foreground">{q.content}</p>
-              )}
-            </div>
-
-            {options ? (
-              <fieldset
-                role="radiogroup"
-                aria-label={`Question ${q.number}`}
-                className="flex flex-wrap gap-2 pl-9"
-              >
-                {options.map((opt) => {
-                  const id = `q${q.number}-${opt}`;
-                  const selected = answer === opt;
-                  return (
-                    <label
-                      key={opt}
-                      htmlFor={id}
-                      className={cx(
-                        // 44px min touch target — options are the most-tapped
-                        // control in the whole app.
-                        "inline-flex min-h-11 cursor-pointer items-center rounded-xl border px-4 text-sm font-medium",
-                        "transition-all duration-150 has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-ring has-[:focus-visible]:ring-offset-2 has-[:focus-visible]:ring-offset-background",
-                        selected
-                          ? "border-primary bg-primary text-primary-foreground shadow-sm"
-                          : "border-border bg-card text-muted-foreground hover:border-primary/40 hover:text-foreground",
-                        disabled && "pointer-events-none opacity-60",
-                      )}
-                    >
-                      <input
-                        id={id}
-                        type="radio"
-                        name={`q-${q.number}`}
-                        value={opt}
-                        checked={selected}
-                        disabled={disabled}
-                        onChange={() => onAnswer(q.number, opt)}
-                        className="sr-only"
-                      />
-                      <span>{opt}</span>
-                    </label>
-                  );
-                })}
-              </fieldset>
-            ) : (
-              <div className="pl-9">
-                <input
-                  type="text"
-                  aria-label={`Question ${q.number}`}
-                  value={answer ?? ""}
-                  disabled={disabled}
-                  onChange={(e) => onAnswer(q.number, e.target.value)}
-                  className={cx(
-                    "w-full max-w-sm rounded-xl border bg-card px-3.5 py-2.5 text-foreground outline-none",
-                    "transition-colors duration-200 placeholder:text-muted-foreground/70",
-                    "focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40 disabled:opacity-60",
-                    answered ? "border-primary/50" : "border-border",
+            return (
+              <li key={q.number} className="space-y-3">
+                <div className="flex gap-3">
+                  <NumberChip n={q.number} answered={answered} className="mt-0.5" />
+                  {q.content && (
+                    <p className="leading-relaxed text-foreground">{q.content}</p>
                   )}
-                  placeholder="Type your answer"
-                />
-              </div>
-            )}
-          </li>
+                </div>
+
+                {options ? (
+                  <fieldset
+                    role="radiogroup"
+                    aria-label={`Question ${q.number}`}
+                    className="flex flex-wrap gap-2 pl-9"
+                  >
+                    {options.map((opt) => (
+                      <OptionButton
+                        key={opt.label}
+                        // The text lives in the key above; here a letter is enough.
+                        option={{ label: opt.label }}
+                        id={`q${q.number}-${opt.label}`}
+                        name={`q-${q.number}`}
+                        type="radio"
+                        selected={answer === opt.label}
+                        used={
+                          singleUse &&
+                          group.questions.some(
+                            (other) =>
+                              other.number !== q.number &&
+                              responses[other.number] === opt.label,
+                          )
+                        }
+                        disabled={disabled}
+                        onSelect={() => onAnswer(q.number, opt.label)}
+                      />
+                    ))}
+                  </fieldset>
+                ) : (
+                  <div className="pl-9">
+                    <AnswerInput
+                      n={q.number}
+                      value={answer ?? ""}
+                      onAnswer={onAnswer}
+                      disabled={disabled}
+                      className="w-full max-w-sm"
+                    />
+                  </div>
+                )}
+              </li>
+            );
+          })}
+      </ol>
+    </div>
+  );
+}
+
+// ── "Choose TWO letters, A-E" ────────────────────────────────────────────────
+
+function LetterSet({ group, responses, onAnswer, disabled }: RendererProps) {
+  const options = optionsFor(group) ?? [];
+  const slots = group.questions.map((q) => q.number);
+  const chosen = slots.map((n) => responses[n] ?? "");
+  const limit = group.selectCount ?? slots.length;
+  const picked = chosen.filter((v) => v !== "").length;
+  const full = picked >= limit;
+
+  function toggle(label: string) {
+    const at = chosen.indexOf(label);
+    if (at >= 0) {
+      onAnswer(slots[at], "");
+      return;
+    }
+    const empty = chosen.indexOf("");
+    if (empty >= 0) onAnswer(slots[empty], label);
+  }
+
+  return (
+    <div className="space-y-3">
+      <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+        <span className="flex gap-1.5">
+          {slots.map((n, i) => (
+            <NumberChip key={n} n={n} answered={chosen[i] !== ""} />
+          ))}
+        </span>
+        <span className="tabular-nums">
+          {picked} of {limit} selected
+        </span>
+      </div>
+      <fieldset
+        aria-label={`Questions ${group.range[0]} to ${group.range[1]}, choose ${limit}`}
+        className={cx("gap-2", options.some((o) => o.text) ? "grid" : "flex flex-wrap")}
+      >
+        {options.map((opt) => {
+          const selected = chosen.includes(opt.label);
+          return (
+            <OptionButton
+              key={opt.label}
+              option={opt}
+              id={`g${group.id}-${opt.label}`}
+              name={`g-${group.id}`}
+              type="checkbox"
+              selected={selected}
+              disabled={disabled || (full && !selected)}
+              onSelect={() => toggle(opt.label)}
+            />
+          );
+        })}
+      </fieldset>
+    </div>
+  );
+}
+
+// ── Table completion ─────────────────────────────────────────────────────────
+
+const BLANK_TOKEN = /\[\[(\d+)\]\]/;
+
+function TableCell({
+  cell,
+  responses,
+  onAnswer,
+  disabled,
+}: {
+  cell: string;
+  responses: Record<number, string>;
+  onAnswer: (n: number, v: string) => void;
+  disabled?: boolean;
+}) {
+  const parts = cell.split(/(\[\[\d+\]\])/).filter((p) => p !== "");
+  return (
+    <>
+      {parts.map((part, i) => {
+        const m = BLANK_TOKEN.exec(part);
+        if (!m) return <span key={i}>{part}</span>;
+        const n = Number(m[1]);
+        const value = responses[n] ?? "";
+        return (
+          <span key={i} className="mx-1 inline-flex items-center gap-1.5 align-middle">
+            <NumberChip n={n} answered={value !== ""} />
+            <AnswerInput
+              n={n}
+              value={value}
+              onAnswer={onAnswer}
+              disabled={disabled}
+              className="w-32 py-1.5 text-sm"
+              placeholder="Answer"
+            />
+          </span>
         );
       })}
-    </ol>
+    </>
+  );
+}
+
+function TableCompletion({
+  group,
+  responses,
+  onAnswer,
+  disabled,
+}: RendererProps) {
+  const rows = group.table ?? [];
+  const hasHeader = rows.length > 1 && !rows[0].some((c) => BLANK_TOKEN.test(c));
+  const body = hasHeader ? rows.slice(1) : rows;
+  const inTable = new Set(
+    rows.flatMap((row) =>
+      row.flatMap((cell) =>
+        [...cell.matchAll(/\[\[(\d+)\]\]/g)].map((m) => Number(m[1])),
+      ),
+    ),
+  );
+  // A blank the table parse missed would otherwise be unanswerable.
+  const orphans = group.questions
+    .map((q) => q.number)
+    .filter((n) => !inTable.has(n));
+
+  return (
+    <div className="space-y-6">
+      <div className="overflow-x-auto">
+        <table className="w-full border-collapse text-left align-top text-sm">
+          {hasHeader && (
+            <thead>
+              <tr>
+                {rows[0].map((cell, i) => (
+                  <th
+                    key={i}
+                    scope="col"
+                    className="border border-border bg-muted/50 px-3 py-2 font-semibold text-foreground"
+                  >
+                    {cell}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+          )}
+          <tbody>
+            {body.map((row, r) => (
+              <tr key={r}>
+                {row.map((cell, c) => (
+                  <td
+                    key={c}
+                    className="border border-border px-3 py-2.5 leading-relaxed text-foreground"
+                  >
+                    <TableCell
+                      cell={cell}
+                      responses={responses}
+                      onAnswer={onAnswer}
+                      disabled={disabled}
+                    />
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      {orphans.length > 0 && (
+        <QuestionList
+          group={group}
+          numbers={orphans}
+          responses={responses}
+          onAnswer={onAnswer}
+          disabled={disabled}
+        />
+      )}
+    </div>
   );
 }

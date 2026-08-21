@@ -8,6 +8,25 @@ import { memo, useRef, useState } from "react";
  * questions (parent re-renders) doesn't wipe highlights. Highlights are
  * ephemeral for now (not persisted across reloads).
  */
+/**
+ * Splits the body into paragraphs, attaching the printed label ("A", "B", …) to
+ * the paragraph it introduces. "Which paragraph contains…" questions point at
+ * those labels, so they have to be on screen.
+ */
+function labelParagraphs(body?: string): { label?: string; text: string }[] {
+  const out: { label?: string; text: string }[] = [];
+  let pending: string | undefined;
+  for (const para of body?.split("\n\n") ?? []) {
+    if (/^[A-Z]$/.test(para)) {
+      pending = para;
+      continue;
+    }
+    out.push(pending ? { label: pending, text: para } : { text: para });
+    pending = undefined;
+  }
+  return out;
+}
+
 export const HighlightablePassage = memo(function HighlightablePassage({
   title,
   body,
@@ -62,8 +81,17 @@ export const HighlightablePassage = memo(function HighlightablePassage({
         onMouseUp={onMouseUp}
         className="mt-4 max-w-prose space-y-4 text-[0.95rem] leading-[1.75] text-foreground"
       >
-        {body?.split("\n\n").map((para, i) => (
-          <p key={i}>{para}</p>
+        {labelParagraphs(body).map((para, i) => (
+          <p key={i}>
+            {para.label && (
+              <>
+                <span className="mr-1 font-semibold text-foreground">
+                  {para.label}
+                </span>{" "}
+              </>
+            )}
+            {para.text}
+          </p>
         ))}
       </div>
       {btn && (
