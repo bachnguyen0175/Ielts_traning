@@ -60,7 +60,7 @@ target band / test date). Post-sign-in lands on `/dashboard`.
    localStorage repository seam ([ADR-0005](./architecture/decisions/0005-repo-structure.md),
    `@composed/domain`); real DB/auth/AI scoring deferred to the BE phase.
 
-## Current status (2026-07-26)
+## Current status (2026-08-22)
 
 **FE phase complete & deployed** — the whole mock flow works end-to-end; **live
 on Vercel** at `ielts-traning-web-nhgz.vercel.app` (sample-only; Cambridge
@@ -85,10 +85,20 @@ Auto-deploys on push to `main`. See [`deploy.md`](./deploy.md).
 (see [`content/ingest/README.md`](../content/ingest/README.md)); Cambridge 15
 Reading Test 1 sittable locally (gitignored, copyright).
 
-**Authored content:** markdown → committed `Test` pipeline specified
+**Authored content:** markdown → committed `Test` pipeline
 ([ADR-0008](./architecture/decisions/0008-authored-content-pipeline.md),
 format in [`content-authoring-format.md`](./content-authoring-format.md)).
-**Parser not yet built** — spec-first, so implementation has a target.
+**Built** — the parser and the `content:build` CLI landed 2026-08-13; the two
+parsers (authored content and the `/import` screen) carry 50 tests between them.
+
+**UI foundation:** every screen sits on `AppShell` or `FocusShell` with real
+navigation, plus a shared primitive set in `components/ui/`
+([ADR-0010](./architecture/decisions/0010-app-shell-and-ui-foundation.md),
+recipe in [`frontend/screen-playbook.md`](./frontend/screen-playbook.md)).
+
+**Repo:** public since 2026-08-22. History was rewritten first to drop the
+Cambridge reference seed; see [`../content/README.md`](../content/README.md) for
+what may and may not be committed.
 
 **Next:** server-side scoring/answer-keys (deferred fidelity rule), AI
 band-scoring for W/S, Clerk **production** instance (for public launch), ingestion

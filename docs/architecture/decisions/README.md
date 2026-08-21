@@ -19,6 +19,6 @@ an ADR — supersede it with a new one and mark the old as `Superseded`.
 | [0004](./0004-attempt-resumability.md) | Attempt resumability | Accepted (resume w/ elapsed-time) |
 | [0005](./0005-repo-structure.md) | Repo structure — pnpm-workspace monorepo (`apps/web`) | Accepted |
 | [0007](./0007-client-data-sync.md) | Client persistence & real-time sync (localStorage + server-action write-through) | Accepted |
-| [0008](./0008-authored-content-pipeline.md) | Authored content pipeline (markdown → committed `Test`) | Accepted (spec) |
+| [0008](./0008-authored-content-pipeline.md) | Authored content pipeline (markdown → committed `Test`) | Accepted |
 | [0009](./0009-database-supabase.md) | Database — Supabase Postgres | **Withdrawn** (recorded in error; 0003 stands) |
 | [0010](./0010-app-shell-and-ui-foundation.md) | App shell (`AppShell` / `FocusShell`) + UI primitives | Accepted |

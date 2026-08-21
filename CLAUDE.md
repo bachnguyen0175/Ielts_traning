@@ -27,8 +27,11 @@ implementing — it's the source of truth.
   Cambridge material is NEVER deployed.** The Cambridge ingester stays a
   local-only dev aid (gitignored output). Do **not** commit/ship Cambridge
   passages or question wording (copyright). See [`content/README.md`](./content/README.md).
-- **Status:** FE phase complete & verified; flow `/ → /start → /tests →
-  /mock?test=<id> → /mock/run → /mock/results → /mock/review · /progress`.
+- **Status:** FE phase complete & verified. Every screen sits on a shared app
+  shell with real navigation (ADR-0010); pick `AppShell` or `FocusShell` before
+  building one. Sitting flow: `/ → /start → /tests → /mock?test=<id> →
+  /mock/run → /mock/results → /mock/review`. Also built: `/dashboard`,
+  `/progress`, `/vocab`, `/import`, `/account`, `/sign-in`, `/sign-up`.
 
 **Fidelity rules (non-negotiable in code):**
 - Listening audio plays **once** — no pause/rewind/replay.

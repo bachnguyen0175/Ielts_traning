@@ -1,7 +1,7 @@
 # ADR-0008: Authored content pipeline (markdown → committed `Test`)
 
-> Status: Accepted (spec) — parser not yet implemented
-> Date: 2026-08-13
+> Status: Accepted — implemented
+> Date: 2026-08-13 (parser shipped 2026-08-13 in `fd57180`)
 
 ## Context
 
@@ -93,7 +93,10 @@ apps/web/src/lib/data/local.ts → TESTS → MockContentRepository → /tests
   of truth.
 - **A new test surface.** The parser needs unit tests of its own. The strongest
   check available: re-express `sample-mock.ts` as markdown, compile it, and
-  assert the result deep-equals the hand-written original.
+  assert the result deep-equals the hand-written original. That fixture now
+  exists at `lib/content/fixtures/sample-mock.test.md`, and the two parsers
+  carry 50 tests between them (`parse-md` for authored content, `parse-exam-md`
+  for the `/import` screen).
 - **The markdown dialect is now a compatibility surface.** Changing it breaks
   existing `.test.md` files. Additive changes only, or recompile every test.
 - **`MockContentRepository` stays synchronous**, so no screen changes — the whole

@@ -57,11 +57,31 @@ immediate objective results (Listening + Reading) plus captured submissions
 | **P4** | Scale & content | Multiple tests, authoring pipeline, progress analytics |
 | **P5** | Breadth | General Training, tutor/classroom, monetization tiers |
 
-## MVP acceptance criteria (draft)
+## MVP acceptance criteria
 
-- [ ] A user can register, start, and complete a full mock in one session.
-- [ ] Listening audio cannot be paused, rewound, or replayed.
-- [ ] Each section enforces its own timer and auto-advances on expiry.
-- [ ] L & R produce a band score from the answer key on submission.
+Audited 2026-08-22 against the test suites. Each box cites what backs it, so a
+reviewer can check the claim instead of trusting the tick.
+
+- [x] A user can register, start, and complete a full mock in one session.
+      `e2e/player.spec.ts` sits all four sections through to `/mock/results`.
+      Sign-up itself has no e2e coverage because Clerk hosts that flow.
+- [x] Listening audio cannot be paused, rewound, or replayed.
+      `e2e/player.spec.ts` asserts the play control is disabled once started.
+- [x] Each section enforces its own timer and auto-advances on expiry.
+      `use-countdown.test.ts` fires `onExpire` exactly once, `player.tsx` wires
+      it to the next section, and `domain/timing` covers the remaining and
+      expiry math against the anchor.
+- [x] L & R produce a band score from the answer key on submission.
+      `domain/scoring`: `answer-match` for the matching rules,
+      `band-conversion` for raw to band, including monotonicity and IELTS
+      half-band rounding.
 - [ ] Writing text and Speaking audio are persisted and retrievable per attempt.
-- [ ] No correctness feedback is shown mid-test.
+      **Half met.** Writing text persists and survives a reload. Speaking audio
+      does not: the recorder puts `URL.createObjectURL(blob)` into
+      `Submission.audioUrl`, and an object URL is only valid for the page that
+      created it, so the recording is unreachable after a reload. Needs real
+      blob storage, which is BE-phase work.
+- [x] No correctness feedback is shown mid-test.
+      True by construction, since the review screen is the only surface that
+      renders correctness and it is reachable only after submission. No test
+      guards it, so a regression here would ship silently.
