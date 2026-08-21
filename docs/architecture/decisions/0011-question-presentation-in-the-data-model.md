@@ -83,9 +83,15 @@ and a question with no text of its own.
 
 ## Consequences
 
-- **`sharedOptions` is a breaking shape change.** The authored lane
-  (`parse-md.ts`) and `sample-mock.ts` were updated with it. Any future consumer
-  reads `opt.label`, never the option itself.
+- **`sharedOptions` is a breaking shape change, and `Test` is persisted.**
+  Imported tests live in a user's `localStorage`, so changing the shape stranded
+  every test already imported: labels read as `undefined`, and the player drew
+  empty chips that all looked selected. `imported-tests.ts` now upgrades stored
+  tests on read, which is the only seam where persisted `Test` JSON enters the
+  app and therefore the only place that needs to know the old shape existed.
+  **Any future change to `Test` needs the same treatment.** The authored lane
+  (`parse-md.ts`) and `sample-mock.ts` are compiled in, so they only needed
+  updating. Any future consumer reads `opt.label`, never the option itself.
 - **The authored markdown dialect still cannot express option text.** Its
   `options:` attribute is letters only, so an authored matching question has the
   same gap the imported one just lost. The dialect can grow `A = text` when a
@@ -99,10 +105,18 @@ and a question with no text of its own.
 - **Rendering is part of verifying content work.** Every one of these faults was
   invisible in source and obvious in a screenshot, which is the same lesson
   ADR-0010 recorded for the UI.
+- **An upgrade cannot recover what was never captured.** A test imported before
+  this ADR has no option text, no table and no paragraph labels, because the old
+  parse discarded them before saving. Only re-importing the file recovers those,
+  and the import screen has no way to say so — the parser has improved but the
+  stored test cannot know that.
 - **Follow-ups:**
-  1. The `/import` preview shows a group's option count; it could show whether
+  1. Store the source markdown alongside an imported test so a parser
+     improvement can re-parse it in place, instead of the user having to notice
+     that their stored test is stale and import the file again.
+  2. The `/import` preview shows a group's option count; it could show whether
      the options have text, which is the single best predictor of a broken
      import.
-  2. `withBlanks` swallows a full stop that follows a dotted leader, so a stem
+  3. `withBlanks` swallows a full stop that follows a dotted leader, so a stem
      ending in a blank loses its final punctuation. Cosmetic.
-  3. Decide whether the authored dialect gets option text (see above).
+  4. Decide whether the authored dialect gets option text (see above).
