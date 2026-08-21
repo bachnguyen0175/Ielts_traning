@@ -13,8 +13,8 @@
 
 ## Implementation
 - `components/tests/test-catalog.tsx` (+ test) · `app/tests/page.tsx` (server).
-- `ContentRepository.listTests()` returns `TestSummary`; `Test` gained
-  `source` + `access` fields.
+- `ContentRepository.listTests()` returns `TestSummary`; `Test` gained a
+  `source` field.
 
 ## ⚠️ Cambridge content boundary (important)
 The library is built to **hold** official Cambridge volumes, but the app does

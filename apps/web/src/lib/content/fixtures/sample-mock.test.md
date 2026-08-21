@@ -3,7 +3,6 @@ id: sample-academic-1
 title: Composed Sample — Academic Mock 1
 type: academic
 source: Composed original
-access: public
 ---
 
 <!--
