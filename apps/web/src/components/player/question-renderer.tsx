@@ -220,7 +220,7 @@ function QuestionList({
                         id={`q${q.number}-${opt.label}`}
                         name={`q-${q.number}`}
                         type="radio"
-                        selected={answer === opt.label}
+                        selected={answered && answer === opt.label}
                         used={
                           singleUse &&
                           group.questions.some(

@@ -1,4 +1,4 @@
-import type { Test } from "@composed/domain";
+import type { Option, Test } from "@composed/domain";
 
 // Tests a user imported in their own browser. They live ONLY in localStorage:
 // never uploaded, never committed, never deployed. That keeps content the user
@@ -16,12 +16,39 @@ const EMPTY: Test[] = [];
 let cache: Test[] | null = null;
 const listeners = new Set<() => void>();
 
+/**
+ * Upgrades tests stored before ADR-0011, whose `sharedOptions` is a list of
+ * bare letters rather than `{ label, text? }`. Read as `Option[]`, every option
+ * has an undefined label, and the player draws it as an empty chip that looks
+ * permanently selected.
+ *
+ * This repairs the shape only. The option text, completion tables and paragraph
+ * labels that those imports never captured are not recoverable here — the file
+ * has to be imported again for those.
+ */
+export function upgradeStored(tests: Test[]): Test[] {
+  for (const test of tests) {
+    for (const section of test.sections ?? []) {
+      for (const passage of section.passages ?? []) {
+        for (const group of passage.questionGroups ?? []) {
+          const options: unknown = group.sharedOptions;
+          if (!Array.isArray(options)) continue;
+          group.sharedOptions = options.map((opt) =>
+            typeof opt === "string" ? { label: opt } : (opt as Option)
+          );
+        }
+      }
+    }
+  }
+  return tests;
+}
+
 function load(): Test[] {
   if (typeof window === "undefined" || !window.localStorage) return EMPTY;
   try {
     const raw = window.localStorage.getItem(KEY);
     const parsed: unknown = raw ? JSON.parse(raw) : [];
-    return Array.isArray(parsed) ? (parsed as Test[]) : EMPTY;
+    return Array.isArray(parsed) ? upgradeStored(parsed as Test[]) : EMPTY;
   } catch {
     return EMPTY;
   }

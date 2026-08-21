@@ -168,6 +168,13 @@ describe("QuestionRenderer", () => {
     expect(screen.queryByText(/\| ---/)).toBeNull();
   });
 
+  it("shows nothing selected while a question is unanswered", () => {
+    render(<QuestionRenderer group={mcq} responses={{}} onAnswer={() => {}} />);
+    for (const label of ["A", "B", "C"]) {
+      expect(screen.getByRole("radio", { name: label })).not.toBeChecked();
+    }
+  });
+
   it("reflects an existing response as selected/filled", () => {
     render(
       <QuestionRenderer group={mcq} responses={{ 1: "A" }} onAnswer={() => {}} />
