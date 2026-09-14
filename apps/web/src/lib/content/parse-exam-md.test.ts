@@ -186,6 +186,20 @@ describe("parseExamMarkdown", () => {
     ]);
   });
 
+  it("reads 'which section contains' as the same task as 'which paragraph'", () => {
+    // Papers use either wording. Unmatched, the group fell through to
+    // short_answer and the player drew a text box where letters belong.
+    const bySection = PAPER.replace(
+      "Which paragraph contains the following information?",
+      "Which section contains the following information?",
+    );
+    const g = parseExamMarkdown(bySection).test!.sections[0].passages![0]
+      .questionGroups[0];
+    expect(g.type).toBe("matching_information");
+    expect(g.answerMatch).toEqual({ kind: "letter" });
+    expect(g.sharedOptions?.map((o) => o.label)).toEqual(["A", "B", "C"]);
+  });
+
   it("expands a paragraph span stated in prose into options", () => {
     const g = test!.sections[0].passages![0].questionGroups[0];
     expect(g.sharedOptions).toEqual([

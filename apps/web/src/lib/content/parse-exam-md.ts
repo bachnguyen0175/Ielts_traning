@@ -121,7 +121,9 @@ function guessType(instruction: string, optionCount: number): TypeGuess {
     };
   }
   if (/correct heading/.test(t)) return { type: "matching_headings", reusable };
-  if (/which paragraph contains/.test(t)) {
+  // Papers word the same task either way — "Which paragraph contains…" and
+  // "Which section contains…" both mean: find where this information is.
+  if (/which (?:paragraph|section) contains/.test(t)) {
     return { type: "matching_information", reusable };
   }
   if (/match each statement|list of people|list of researchers/.test(t)) {
