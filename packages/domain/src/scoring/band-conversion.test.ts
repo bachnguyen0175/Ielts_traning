@@ -18,6 +18,18 @@ describe("rawToBand (Academic, approximate)", () => {
     expect(rawToBand("listening", 23)).toBe(6);
   });
 
+  it("does not award band 2 for getting nothing right", () => {
+    // The table used to bottom out at band 2, so a blank paper read as 2.0.
+    // Band 1 is the non-user floor; band 0 means the paper was not attempted,
+    // which a raw score alone cannot tell (see lib/scoring.ts).
+    for (const skill of ["listening", "reading"] as const) {
+      expect(rawToBand(skill, 0)).toBe(1);
+      expect(rawToBand(skill, 2)).toBe(1);
+      expect(rawToBand(skill, 3)).toBe(2);
+      expect(rawToBand(skill, 4)).toBe(2.5);
+    }
+  });
+
   it("is monotonic — a higher raw never yields a lower band", () => {
     for (const skill of ["listening", "reading"] as const) {
       let prev = 0;

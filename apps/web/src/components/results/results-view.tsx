@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardBody, Eyebrow } from "@/components/ui/card";
 import { BandGauge } from "@/components/ui/band-gauge";
 import { cx } from "@/lib/cx";
+import { isFullLength } from "@/lib/scoring";
 import {
   HeadphonesIcon,
   BookIcon,
@@ -105,8 +106,14 @@ export function ResultsView({
             <BandGauge band={overall} caption="Indicative band" />
           </div>
           <p className="mx-auto mt-6 max-w-sm text-sm leading-relaxed text-muted-foreground">
-            Scaled to a full-length test. Writing and Speaking are captured for
-            your own review — they are not scored yet.
+            {/* Only say it was scaled when it was. A full 40-question paper
+                converts straight off the table; calling that "scaled" makes a
+                real score look like an estimate. */}
+            {results.every(isFullLength)
+              ? "Converted from your raw score."
+              : "Scaled to a full-length test."}{" "}
+            Writing and Speaking are captured for your own review — they are not
+            scored yet.
           </p>
         </CardBody>
       </Card>

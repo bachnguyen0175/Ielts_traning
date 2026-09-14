@@ -23,7 +23,13 @@ const READING_ACADEMIC: Threshold[] = [
   { min: 8, band: 3.5 },
   { min: 6, band: 3 },
   { min: 4, band: 2.5 },
-  { min: 0, band: 2 },
+  { min: 3, band: 2 },
+  // Band 1 is the "non-user" floor for a paper that WAS attempted. The old
+  // table bottomed out at band 2 for `min: 0`, so a candidate who got nothing
+  // right — or answered nothing at all — was told they had scored 2.0.
+  // Not attempting at all is band 0, which scoring.ts decides, because a raw
+  // of 0 alone cannot tell the two apart.
+  { min: 0, band: 1 },
 ];
 
 const LISTENING: Threshold[] = [
@@ -41,7 +47,8 @@ const LISTENING: Threshold[] = [
   { min: 8, band: 3.5 },
   { min: 6, band: 3 },
   { min: 4, band: 2.5 },
-  { min: 0, band: 2 },
+  { min: 3, band: 2 },
+  { min: 0, band: 1 },
 ];
 
 export function rawToBand(
