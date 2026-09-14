@@ -79,7 +79,8 @@ export function SectionView({
             <HighlightablePassage key={p.id} title={p.title} body={p.body} />
           ))}
           <p className="text-xs text-muted-foreground">
-            Tip: select text in the passage to highlight it.
+            Tip: select text in the passage to highlight it; click a
+            highlight to remove it.
           </p>
         </div>
         {questions}

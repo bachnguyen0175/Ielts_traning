@@ -4,9 +4,11 @@ import { memo, useRef, useState } from "react";
 
 /**
  * Reading passage with a highlight tool (SIT-5). Selecting text reveals a
- * "Highlight" button that wraps the selection in a <mark>. Memoized so answering
- * questions (parent re-renders) doesn't wipe highlights. Highlights are
- * ephemeral for now (not persisted across reloads).
+ * "Highlight" button that wraps the selection in a <mark>; clicking a highlight
+ * takes it off again, because a mark you cannot clear is worse than none — the
+ * real test lets a candidate change their mind. Memoized so answering questions
+ * (parent re-renders) doesn't wipe highlights. Highlights are ephemeral for now
+ * (not persisted across reloads).
  */
 /**
  * Splits the body into paragraphs, attaching the printed label ("A", "B", …) to
@@ -52,13 +54,43 @@ export const HighlightablePassage = memo(function HighlightablePassage({
     setBtn({ x: rect.left + rect.width / 2, y: rect.top });
   }
 
+  /** Unwraps a <mark>, putting its text back where it was. */
+  function removeHighlight(mark: Element) {
+    const parent = mark.parentNode;
+    if (!parent) return;
+    while (mark.firstChild) parent.insertBefore(mark.firstChild, mark);
+    parent.removeChild(mark);
+    // Rejoin the text nodes the <mark> split. Without this the seam persists,
+    // and a later selection across it cannot be surrounded in one range.
+    parent.normalize();
+  }
+
+  function onClickPassage(e: React.MouseEvent) {
+    const mark = (e.target as HTMLElement).closest("mark");
+    if (mark && ref.current?.contains(mark)) removeHighlight(mark);
+  }
+
+  // A <mark> is not focusable by default, so highlighting would be a one-way
+  // door for anyone not using a mouse.
+  function onKeyDownPassage(e: React.KeyboardEvent) {
+    if (e.key !== "Enter" && e.key !== " ") return;
+    const mark = (e.target as HTMLElement).closest("mark");
+    if (!mark || !ref.current?.contains(mark)) return;
+    e.preventDefault();
+    removeHighlight(mark);
+  }
+
   function highlight() {
     const sel = window.getSelection?.();
     if (!sel || sel.isCollapsed || sel.rangeCount === 0) return;
     const range = sel.getRangeAt(0);
     try {
       const mark = document.createElement("mark");
-      mark.className = "rounded bg-accent/30 text-foreground";
+      mark.className = "cursor-pointer rounded bg-accent/30 text-foreground";
+      mark.title = "Click to remove this highlight";
+      mark.tabIndex = 0;
+      mark.setAttribute("role", "button");
+      mark.setAttribute("aria-label", "Remove highlight");
       range.surroundContents(mark);
     } catch {
       /* selection crosses element boundaries — skip */
@@ -79,6 +111,8 @@ export const HighlightablePassage = memo(function HighlightablePassage({
       <div
         ref={ref}
         onMouseUp={onMouseUp}
+        onClick={onClickPassage}
+        onKeyDown={onKeyDownPassage}
         className="mt-4 max-w-prose space-y-4 text-[0.95rem] leading-[1.75] text-foreground"
       >
         {labelParagraphs(body).map((para, i) => (
