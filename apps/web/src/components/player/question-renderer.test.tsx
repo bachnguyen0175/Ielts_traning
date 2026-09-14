@@ -258,6 +258,17 @@ describe("QuestionRenderer", () => {
     expect(screen.queryByLabelText(/already used/i)).toBeNull();
   });
 
+  it("keeps shared-list letters in a row, not stacked full width", () => {
+    // The data carries text, but the buttons show bare letters because the key
+    // prints it above — so they lay out as chips, not as full-width rows.
+    const { container } = render(
+      <QuestionRenderer group={matching} responses={{}} onAnswer={() => {}} />,
+    );
+    const fieldset = container.querySelector("fieldset")!;
+    expect(fieldset.className).toContain("flex-wrap");
+    expect(fieldset.className).not.toContain("flex-col");
+  });
+
   it("shows nothing selected while a question is unanswered", () => {
     render(<QuestionRenderer group={mcq} responses={{}} onAnswer={() => {}} />);
     for (const label of ["A", "B", "C"]) {

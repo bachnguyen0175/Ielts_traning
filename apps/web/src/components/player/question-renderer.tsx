@@ -163,7 +163,17 @@ function OptionButton({
  */
 function OptionKey({ options }: { options: Option[] }) {
   return (
-    <dl className="grid gap-x-6 gap-y-1.5 rounded-xl border border-border bg-muted/40 px-4 py-3 text-sm sm:grid-cols-2">
+    // Stays put while its own questions scroll past, then releases with the
+    // group. On paper the list and its questions share one page; on a screen
+    // they do not, and scrolling back to remember what "C" stood for is
+    // friction the paper never had.
+    //
+    // lg:top-44 matches the passage column in section-view.tsx — the player's
+    // header wraps its question navigator, so its height is not fixed and this
+    // is the offset already measured for it. Below lg the header is taller
+    // still relative to the viewport, so the key scrolls normally there, as
+    // the passage does.
+    <dl className="grid gap-x-6 gap-y-1.5 rounded-xl border border-border bg-muted/95 px-4 py-3 text-sm backdrop-blur-sm sm:grid-cols-2 lg:sticky lg:top-44 lg:z-20">
       {options.map((opt) => (
         <div key={opt.label} className="flex gap-2.5">
           <dt className="w-6 shrink-0 font-semibold text-foreground">
@@ -211,7 +221,9 @@ function QuestionList({
             const options = q.options?.length ? q.options : groupOptions;
             // Options stack when they carry their own text; bare letters sit
             // in a row.
-            const lettersOnly = !options?.some((o) => o.text);
+            // What the BUTTON shows, not what the data holds: with a key
+            // above, these render as bare letters and belong in a row.
+            const lettersOnly = showKey || !options?.some((o) => o.text);
 
             return (
               <li key={q.number} className="space-y-3">
