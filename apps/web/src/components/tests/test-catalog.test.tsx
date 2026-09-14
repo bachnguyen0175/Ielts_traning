@@ -1,7 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import { describe, it, expect, vi } from "vitest";
 import type { TestSummary } from "@/lib/data/repositories";
-import { TestCatalog } from "./test-catalog";
+import { TestCatalog, groupBySeries } from "./test-catalog";
 
 // The catalog fetches the shared library through a server action, which cannot
 // be imported for real under vitest (it pulls `server-only` and the Neon
@@ -100,10 +100,94 @@ describe("TestCatalog — imported tests", () => {
     render(<TestCatalog tests={tests} />);
 
     // Built-ins still render, and the imported one joins them.
-    expect(screen.getByText("Composed Sample — Academic Mock 1")).toBeTruthy();
-    expect(screen.getByText("Imported Reading Paper")).toBeTruthy();
+    expect(screen.getByText("Academic Mock 1")).toBeTruthy();
+    expect(
+      screen.getByRole("heading", { level: 3, name: "Imported Reading Paper" })
+    ).toBeTruthy();
     expect(
       screen.getByRole("link", { name: /start imported reading paper/i })
     ).toHaveAttribute("href", "/mock?test=imported-paper-1");
+  });
+});
+
+describe("groupBySeries", () => {
+  const paper = (title: string, id = title): TestSummary => ({
+    id,
+    title,
+    type: "academic",
+    skills: ["reading"],
+    totalQuestions: 40,
+    durationMinutes: 60,
+  });
+
+  it("puts papers from the same book under one heading", () => {
+    const groups = groupBySeries([
+      paper("Cambridge IELTS 15 - Reading Test 1"),
+      paper("Cambridge IELTS 14 - Reading Test 4"),
+      paper("Cambridge IELTS 15 - Reading Test 2"),
+    ]);
+
+    expect(groups.map((g) => g.heading)).toEqual([
+      "Cambridge IELTS 15",
+      "Cambridge IELTS 14",
+    ]);
+    expect(groups[0].tests.map((t) => t.label)).toEqual([
+      "Reading Test 1",
+      "Reading Test 2",
+    ]);
+  });
+
+  it("groups on an em dash as well as a hyphen", () => {
+    const groups = groupBySeries([
+      paper("Cambridge IELTS 15 - Reading Test 1"),
+      paper("Cambridge IELTS 15 — Reading Test 3"),
+    ]);
+
+    expect(groups).toHaveLength(1);
+    expect(groups[0].tests.map((t) => t.label)).toEqual([
+      "Reading Test 1",
+      "Reading Test 3",
+    ]);
+  });
+
+  it("ignores a hyphen with no space around it", () => {
+    const groups = groupBySeries([paper("Self-study Reading Paper")]);
+
+    expect(groups[0].heading).toBe("Self-study Reading Paper");
+    expect(groups[0].tests[0].label).toBe("Self-study Reading Paper");
+  });
+
+  it("keeps a title with no dash whole", () => {
+    const groups = groupBySeries([paper("Imported Reading Paper")]);
+
+    expect(groups[0].heading).toBe("Imported Reading Paper");
+    expect(groups[0].tests[0].label).toBe("Imported Reading Paper");
+  });
+
+  it("splits on the first dash only, so the paper keeps its own", () => {
+    const groups = groupBySeries([
+      paper("Cambridge IELTS 15 - Reading Test 1 - Section A"),
+    ]);
+
+    expect(groups[0].heading).toBe("Cambridge IELTS 15");
+    expect(groups[0].tests[0].label).toBe("Reading Test 1 - Section A");
+  });
+});
+
+describe("TestCatalog — grouping", () => {
+  it("heads each book with its own section", () => {
+    importedTests.reset();
+
+    render(<TestCatalog tests={tests} />);
+
+    expect(
+      screen.getByRole("heading", { level: 2, name: "Cambridge 15" })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { level: 2, name: "Composed Sample" })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: /start cambridge 15 — reading test 1/i })
+    ).toBeInTheDocument();
   });
 });

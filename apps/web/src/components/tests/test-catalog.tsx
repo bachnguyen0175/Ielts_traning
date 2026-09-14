@@ -38,7 +38,7 @@ function SkillChip({ skill }: { skill: string }) {
   );
 }
 
-function TestCard({ test }: { test: TestSummary }) {
+function TestCard({ test, label }: { test: TestSummary; label: string }) {
   return (
     <Card className="group flex h-full flex-col transition-all duration-200 hover:border-foreground/20 hover:shadow-lg">
       <CardBody className="flex flex-1 flex-col">
@@ -49,7 +49,7 @@ function TestCard({ test }: { test: TestSummary }) {
             </p>
           )}
           <h3 className="mt-1.5 font-serif text-lg font-semibold leading-snug tracking-tight text-foreground">
-            {test.title}
+            {label}
           </h3>
         </div>
 
@@ -95,6 +95,34 @@ function TestCard({ test }: { test: TestSummary }) {
   );
 }
 
+type CatalogGroup = {
+  heading: string;
+  tests: { test: TestSummary; label: string }[];
+};
+
+/**
+ * A paper's title usually names the book first and the paper inside it second
+ * — "Cambridge IELTS 15 - Reading Test 1". Split on that first dash so the book
+ * can head its own group and each card prints only what sets it apart. A title
+ * with no dash has no book to belong to, so it heads a group alone.
+ */
+const SERIES = /^(.+?)\s+[-\u2013\u2014]\s+(.+)$/;
+
+export function groupBySeries(tests: TestSummary[]): CatalogGroup[] {
+  const groups: CatalogGroup[] = [];
+  for (const test of tests) {
+    const m = SERIES.exec(test.title);
+    const heading = m ? m[1] : test.title;
+    const entry = { test, label: m ? m[2] : test.title };
+    // First appearance fixes the order, so groups keep the order the tests
+    // arrived in: built-ins, then the shared library, then this browser's.
+    const existing = groups.find((g) => g.heading === heading);
+    if (existing) existing.tests.push(entry);
+    else groups.push({ heading, tests: [entry] });
+  }
+  return groups;
+}
+
 export function TestCatalog({ tests }: { tests: TestSummary[] }) {
   // `tests` is the server-rendered list. Imported tests live in localStorage,
   // which the server cannot read, so they are APPENDED on the client — the
@@ -121,6 +149,8 @@ export function TestCatalog({ tests }: { tests: TestSummary[] }) {
     [tests, published, imported]
   );
 
+  const groups = useMemo(() => groupBySeries(all), [all]);
+
   if (all.length === 0) {
     return (
       <EmptyState icon={<LibraryIcon />} title="No tests available yet">
@@ -131,16 +161,46 @@ export function TestCatalog({ tests }: { tests: TestSummary[] }) {
   }
 
   return (
-    <div className="grid gap-5 sm:grid-cols-2">
-      {all.map((t, i) => (
-        <div
-          key={t.id}
-          className="enter"
-          style={{ ["--i" as string]: Math.min(i, 6) }}
-        >
-          <TestCard test={t} />
-        </div>
-      ))}
+    <div className="space-y-10">
+      {groups.map((group, gi) => {
+        // The stagger runs across the whole page, not restarted per group.
+        const offset = groups
+          .slice(0, gi)
+          .reduce((n, g) => n + g.tests.length, 0);
+        // Indexed, not slugified: the id is never seen, and slugifying two
+        // headings that differ only in punctuation collides.
+        const headingId = `catalog-group-${gi}`;
+        return (
+          <section key={group.heading} aria-labelledby={headingId}>
+            {/* The count sits beside the heading, not inside it — inside, it
+                runs onto the end of the accessible name ("Cambridge 151
+                paper"). */}
+            <div className="mb-4 flex flex-wrap items-baseline gap-x-3 gap-y-1">
+              <h2
+                id={headingId}
+                className="font-serif text-xl font-semibold tracking-tight text-foreground"
+              >
+                {group.heading}
+              </h2>
+              <span className="text-xs font-medium uppercase tracking-[0.12em] text-muted-foreground">
+                {group.tests.length}{" "}
+                {group.tests.length === 1 ? "paper" : "papers"}
+              </span>
+            </div>
+            <div className="grid gap-5 sm:grid-cols-2">
+              {group.tests.map(({ test, label }, i) => (
+                <div
+                  key={test.id}
+                  className="enter"
+                  style={{ ["--i" as string]: Math.min(offset + i, 6) }}
+                >
+                  <TestCard test={test} label={label} />
+                </div>
+              ))}
+            </div>
+          </section>
+        );
+      })}
     </div>
   );
 }
