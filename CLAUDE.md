@@ -10,7 +10,8 @@ An IELTS **Academic** practice platform whose differentiator is **authentic
 test-day conditions**. Read [`docs/README.md`](./docs/README.md) before
 implementing — it's the source of truth.
 
-- **Stack:** Next.js (App Router) · Vercel · Vercel AI SDK (scoring is a later phase).
+- **Stack:** Next.js (App Router) · Vercel · Clerk auth · Neon Postgres +
+  Drizzle · Vercel AI SDK (band-scoring is a later phase).
 - **Repo layout:** pnpm-workspace monorepo — the app lives in **`apps/web`**
   (not the root). Run from the root: `pnpm dev` / `pnpm build` / `pnpm test`
   / `pnpm test:e2e` (these delegate to `--filter web`). Shared packages go in
@@ -19,25 +20,34 @@ implementing — it's the source of truth.
   captured (scoring deferred). See [`docs/01-scope-mvp.md`](./docs/01-scope-mvp.md).
 - **Domain truth:** test format, timing, and scoring rules live in
   [`docs/domain/`](./docs/domain/ielts-overview.md). Features must conform to them.
-- **Build strategy:** **mock-first FE** — screens depend on a localStorage
-  repository seam (`apps/web/src/lib/data`), pure logic lives in
-  `packages/@composed/domain`. Real DB/auth/AI scoring are the **BE phase**.
-- **Launch mode:** **PUBLIC product** *(2026-07-26 pivot from "private personal
-  tool")* — real users sign up. **Deployed content must be original or licensed;
-  Cambridge material is NEVER deployed.** The Cambridge ingester stays a
-  local-only dev aid (gitignored output). Do **not** commit/ship Cambridge
-  passages or question wording (copyright). See [`content/README.md`](./content/README.md).
-- **Status:** FE phase complete & verified. Every screen sits on a shared app
-  shell with real navigation (ADR-0010); pick `AppShell` or `FocusShell` before
-  building one. Sitting flow: `/ → /start → /tests → /mock?test=<id> →
-  /mock/run → /mock/results → /mock/review`. Also built: `/dashboard`,
-  `/progress`, `/vocab`, `/import`, `/account`, `/sign-in`, `/sign-up`.
+- **Build strategy:** screens depend on the repository seam
+  (`apps/web/src/lib/data`), pure logic lives in `packages/@composed/domain` —
+  keep both seams intact. Guests stay on localStorage; signed-in users mirror to
+  Postgres through the server actions in `lib/actions/db-actions.ts`. Still
+  deferred: **server-side scoring/answer keys** and **AI band-scoring** for
+  Writing/Speaking.
+- **Status:** FE complete & verified; **BE phases 1–3 landed & live** (auth,
+  database, sync). Every screen sits on a shared app shell with real navigation
+  (ADR-0010); pick `AppShell` or `FocusShell` before building one. Sitting flow:
+  `/ → /start → /tests → /mock?test=<id> → /mock/run → /mock/results →
+  /mock/review`. Also built: `/dashboard`, `/progress`, `/vocab`, `/import`,
+  `/account`, `/sign-in`, `/sign-up`.
+- **Backend (built):** **Clerk** auth — middleware lives in `src/proxy.ts`, not
+  `middleware.ts`; guest-first preserved; **dev** keys today (ADR-0002) ·
+  **Neon + Drizzle** — `profile`/`attempt`/`vocab` keyed off Clerk's `userId`,
+  nested attempt data JSONB (ADR-0003; ADR-0009's Supabase move was withdrawn) ·
+  **sync** (ADR-0007) — the user id is ALWAYS read from Clerk server-side and
+  every query is scoped by it; actions return `null`/`false` for guests so
+  callers fall back to localStorage. Never take a user id from the client.
+- **Next up:** server-side scoring/answer keys, AI band-scoring for W/S, a Clerk
+  **production** instance (required for public launch).
 
 **Fidelity rules (non-negotiable in code):**
 - Listening audio plays **once** — no pause/rewind/replay.
 - Timing authority and answer keys belong **server-side**; the client never
-  receives correct answers before submission. *(FE-phase caveat: while mock-first,
-  content/keys are client-side; this rule is enforced once the BE lands.)*
+  receives correct answers before submission. *(Not true yet: content and keys
+  are still client-side and `lib/scoring.ts` scores in the browser. The auth/DB
+  phases did not change this — it lands with server-side scoring.)*
 - **No correctness feedback** until the whole test is submitted.
 
 Record significant technical decisions as ADRs in
@@ -106,11 +116,9 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 <!-- code-review-graph MCP tools -->
 ## MCP Tools: code-review-graph
 
-**IMPORTANT: This project has a knowledge graph. ALWAYS use the
-code-review-graph MCP tools BEFORE using Grep/Glob/Read to explore
-the codebase.** The graph is faster, cheaper (fewer tokens), and gives
-you structural context (callers, dependents, test coverage) that file
-scanning cannot.
+**This project has a knowledge graph. Start with the code-review-graph
+MCP tools to narrow scope, then read the source.** The graph is cheaper than scanning files and
+gives you structural context (callers, dependents, test coverage) that file search cannot.
 
 ### When to use graph tools FIRST
 
@@ -120,7 +128,15 @@ scanning cannot.
 - **Finding relationships**: `query_graph_tool` with callers_of/callees_of/imports_of/tests_for
 - **Architecture questions**: `get_architecture_overview_tool` + `list_communities_tool`
 
-Fall back to Grep/Glob/Read **only** when the graph doesn't cover what you need.
+### Verify in the source
+
+- Narrow scope with the graph, then read the source. Do not change code from graph output alone.
+- For any non-trivial change, read the implementation and the relevant tests before concluding.
+- Verify the exact source when touching behavior, database logic, migrations, retries, fallbacks,
+  recovery, or compatibility code.
+- When the graph and the source disagree, the source wins. The graph may be stale or may not
+  model that relationship.
+- An empty graph result can mean "not indexed" or "not statically visible", not "does not exist".
 
 ### Key Tools
 
@@ -141,3 +157,4 @@ Fall back to Grep/Glob/Read **only** when the graph doesn't cover what you need.
 2. Use `detect_changes_tool` for code review.
 3. Use `get_affected_flows_tool` to understand impact.
 4. Use `query_graph_tool` pattern="tests_for" to check coverage.
+<!-- /code-review-graph MCP tools -->
