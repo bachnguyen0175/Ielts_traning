@@ -1,8 +1,8 @@
 import "server-only";
 import { and, desc, eq } from "drizzle-orm";
-import type { Attempt } from "@composed/domain";
+import type { Attempt, Test } from "@composed/domain";
 import { db } from "./index";
-import { attempts, profiles, vocab } from "./schema";
+import { attempts, profiles, publishedTests, vocab } from "./schema";
 import type { Profile, VocabItem } from "../data/repositories";
 
 // Server-only DB repositories, keyed by the authenticated user's id. These back
@@ -174,4 +174,35 @@ export async function updateVocabBox(
 
 export async function deleteVocab(userId: string, id: string): Promise<void> {
   await db.delete(vocab).where(and(eq(vocab.id, id), eq(vocab.userId, userId)));
+}
+
+
+// ── Published tests ──
+// Readable by every signed-in user; the admin guard lives in the server action,
+// which is the only caller that writes. This is the one table not scoped by the
+// reading user's id — that is the point of it.
+
+export async function listPublished(): Promise<Test[]> {
+  const rows = await db
+    .select({ data: publishedTests.data })
+    .from(publishedTests)
+    .orderBy(desc(publishedTests.createdAt));
+  return rows.map((r) => r.data);
+}
+
+export async function upsertPublished(
+  userId: string,
+  test: Test
+): Promise<void> {
+  await db
+    .insert(publishedTests)
+    .values({ id: test.id, title: test.title, data: test, publishedBy: userId })
+    .onConflictDoUpdate({
+      target: publishedTests.id,
+      set: { title: test.title, data: test, updatedAt: new Date() },
+    });
+}
+
+export async function deletePublished(id: string): Promise<void> {
+  await db.delete(publishedTests).where(eq(publishedTests.id, id));
 }

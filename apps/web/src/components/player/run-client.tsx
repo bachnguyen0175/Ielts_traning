@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import type { Test } from "@composed/domain";
 import { contentRepo, attemptRepo } from "@/lib/data/client";
+import { loadPublishedTests } from "@/lib/data/published-tests-loader";
 import { pullAttempt, pushAttempt } from "@/lib/actions/db-actions";
 import { Player } from "./player";
 
@@ -58,6 +59,9 @@ export function RunClient({ userId }: { userId: string | null }) {
     let cancelled = false;
     (async () => {
       if (!attemptId) return router.replace("/mock");
+      // A published test is fetched, not in localStorage — wait for it before
+      // deciding the attempt's test is missing.
+      await loadPublishedTests();
       // Resume: hydrate localStorage from the DB copy if signed in (cross-device).
       if (userId) {
         const dbAttempt = await pullAttempt(attemptId).catch(() => null);

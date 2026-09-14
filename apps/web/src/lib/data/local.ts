@@ -3,6 +3,7 @@ import { SAMPLE_MOCK } from "../content/sample-mock";
 import { INGESTED_TESTS } from "../content/ingested";
 import { AUTHORED_TESTS } from "../content/authored";
 import { importedTests } from "./imported-tests";
+import { publishedTests } from "./published-tests";
 import { dueAt, reviewCard } from "../srs";
 import type {
   AttemptRepository,
@@ -57,9 +58,14 @@ export function summarize(t: Test): TestSummary {
 }
 
 export class MockContentRepository implements ContentRepository {
-  /** Built-in tests plus any the user imported in this browser (client only). */
+  /**
+   * Built-in tests, plus any an admin published for everyone, plus any this
+   * browser imported. Published tests load asynchronously, so a screen looking
+   * one up by id must wait for `publishedTests.ready()` before deciding it is
+   * missing.
+   */
   private all(): Test[] {
-    return [...TESTS, ...importedTests.list()];
+    return [...TESTS, ...publishedTests.list(), ...importedTests.list()];
   }
   listTests(): TestSummary[] {
     return this.all().map(summarize);

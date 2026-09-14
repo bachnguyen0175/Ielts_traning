@@ -2,7 +2,8 @@
 
 import { auth } from "@clerk/nextjs/server";
 import * as repos from "@/lib/db/repos";
-import type { Attempt } from "@composed/domain";
+import { adminUserId } from "@/lib/auth/admin";
+import type { Attempt, Test } from "@composed/domain";
 import type { Profile, VocabItem } from "@/lib/data/repositories";
 
 // Server actions = the boundary the client uses to reach the DB. The user id is
@@ -68,5 +69,33 @@ export async function pushVocabRemove(id: string): Promise<boolean> {
   const userId = await currentUserId();
   if (!userId) return false;
   await repos.deleteVocab(userId, id);
+  return true;
+}
+
+// ── Published tests (admin) ──
+// Reads are open to any signed-in user; writes require ADMIN_USER_IDS. The
+// admin check is made HERE, server-side, from the Clerk session — never from
+// anything the client sends.
+
+export async function amIAdmin(): Promise<boolean> {
+  return (await adminUserId()) !== null;
+}
+
+export async function pullPublishedTests(): Promise<Test[]> {
+  const userId = await currentUserId();
+  return userId ? repos.listPublished() : [];
+}
+
+export async function publishTest(test: Test): Promise<boolean> {
+  const userId = await adminUserId();
+  if (!userId) return false;
+  await repos.upsertPublished(userId, test);
+  return true;
+}
+
+export async function unpublishTest(id: string): Promise<boolean> {
+  const userId = await adminUserId();
+  if (!userId) return false;
+  await repos.deletePublished(id);
   return true;
 }

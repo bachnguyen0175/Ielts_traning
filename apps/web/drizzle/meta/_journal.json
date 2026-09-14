@@ -15,6 +15,13 @@
       "when": 1785043242404,
       "tag": "0001_fantastic_stone_men",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1789392372710,
+      "tag": "0002_breezy_azazel",
+      "breakpoints": true
     }
   ]
 }

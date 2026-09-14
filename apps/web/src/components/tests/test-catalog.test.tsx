@@ -1,7 +1,14 @@
 import { render, screen } from "@testing-library/react";
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import type { TestSummary } from "@/lib/data/repositories";
 import { TestCatalog } from "./test-catalog";
+
+// The catalog fetches the shared library through a server action, which cannot
+// be imported for real under vitest (it pulls `server-only` and the Neon
+// client). The store it hydrates is pure and is exercised on its own.
+vi.mock("@/lib/data/published-tests-loader", () => ({
+  loadPublishedTests: () => Promise.resolve(),
+}));
 import { importedTests } from "@/lib/data/imported-tests";
 
 const tests: TestSummary[] = [

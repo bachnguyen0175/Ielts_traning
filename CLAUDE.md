@@ -39,6 +39,13 @@ implementing — it's the source of truth.
   **sync** (ADR-0007) — the user id is ALWAYS read from Clerk server-side and
   every query is scoped by it; actions return `null`/`false` for guests so
   callers fall back to localStorage. Never take a user id from the client.
+- **Admin / shared library:** `ADMIN_USER_IDS` — comma-separated Clerk user ids,
+  read server-side only (`lib/auth/admin.ts`) — names who may publish a parsed
+  paper to the `published_test` table, which every signed-in user can sit. Every
+  publishing action re-checks it, so the hidden button is a courtesy, never the
+  guard. A normal user's `/import` still uploads nothing. There is **no code
+  guard on what may be published**. See
+  [ADR-0012](./docs/architecture/decisions/0012-admin-published-content.md).
 - **Next up:** server-side scoring/answer keys, AI band-scoring for W/S, a Clerk
   **production** instance (required for public launch).
 

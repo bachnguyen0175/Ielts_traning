@@ -6,6 +6,12 @@ import type { Option, Test } from "@composed/domain";
 // machine, and is why importing is client-side rather than a server action
 // writing to the database.
 //
+// An admin can now PUBLISH a parsed test to the shared library
+// (`published-tests.ts`, ADR-0012). That is a separate, deliberate action on a
+// separate store — importing still uploads nothing. For published content the
+// copyright rule therefore no longer rests on the architecture; it rests on
+// the publisher.
+//
 // Exposed as an external store (`subscribe` + `list`) so components can read it
 // with useSyncExternalStore. `list` therefore MUST return a stable reference
 // between changes, hence the cache — a fresh array each call would loop.

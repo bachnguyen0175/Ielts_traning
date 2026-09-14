@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import type { SectionScore } from "@composed/domain";
+import { loadPublishedTests } from "@/lib/data/published-tests-loader";
 import { contentRepo, attemptRepo } from "@/lib/data/client";
 import { pushAttempt } from "@/lib/actions/db-actions";
 import { computeObjectiveResults } from "@/lib/scoring";
@@ -20,7 +21,9 @@ export function ResultsClient({ userId }: { userId: string | null }) {
 
   useEffect(() => {
     let cancelled = false;
-    Promise.resolve().then(() => {
+    // A published test is fetched, not in localStorage, so wait for it before
+    // deciding the attempt's test is missing and bailing to the start.
+    loadPublishedTests().then(() => {
       if (cancelled) return;
       if (!attemptId) return router.replace("/");
       const attempt = repo.get(attemptId);

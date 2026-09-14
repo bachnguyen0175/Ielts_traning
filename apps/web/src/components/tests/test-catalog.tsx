@@ -1,8 +1,10 @@
 "use client";
 
-import { useMemo, useSyncExternalStore } from "react";
+import { useEffect, useMemo, useSyncExternalStore } from "react";
 import type { TestSummary } from "@/lib/data/repositories";
 import { importedTests } from "@/lib/data/imported-tests";
+import { publishedTests } from "@/lib/data/published-tests";
+import { loadPublishedTests } from "@/lib/data/published-tests-loader";
 import { summarize } from "@/lib/data/local";
 import { Button } from "@/components/ui/button";
 import { Card, CardBody } from "@/components/ui/card";
@@ -103,9 +105,20 @@ export function TestCatalog({ tests }: { tests: TestSummary[] }) {
     importedTests.list,
     importedTests.serverList
   );
+  // Published tests are fetched, so they arrive the same way: after the first
+  // render. They come before the browser's own imports — they are the shared
+  // library, not this machine's scratch copies.
+  useEffect(() => {
+    void loadPublishedTests();
+  }, []);
+  const published = useSyncExternalStore(
+    publishedTests.subscribe,
+    publishedTests.list,
+    publishedTests.serverList
+  );
   const all = useMemo(
-    () => [...tests, ...imported.map(summarize)],
-    [tests, imported]
+    () => [...tests, ...published.map(summarize), ...imported.map(summarize)],
+    [tests, published, imported]
   );
 
   if (all.length === 0) {

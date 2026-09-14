@@ -1,12 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { Test } from "@composed/domain";
 import {
   parseExamMarkdown,
   type Diagnostic,
 } from "@/lib/content/parse-exam-md";
 import { importedTests } from "@/lib/data/imported-tests";
+import { amIAdmin, publishTest } from "@/lib/actions/db-actions";
 import { Button } from "@/components/ui/button";
 import { Card, CardBody, Eyebrow } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -29,6 +30,18 @@ interface Parsed {
 export function ImportClient() {
   const [parsed, setParsed] = useState<Parsed | null>(null);
   const [saved, setSaved] = useState<Test[]>([]);
+  // Whether THIS user may publish. Decided server-side from the Clerk session;
+  // the button's absence is a courtesy, not the guard — publishTest re-checks.
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [publishState, setPublishState] = useState<
+    "idle" | "publishing" | "done" | "failed"
+  >("idle");
+
+  useEffect(() => {
+    void amIAdmin()
+      .then(setIsAdmin)
+      .catch(() => setIsAdmin(false));
+  }, []);
   const [dragging, setDragging] = useState(false);
   const [hydrated, setHydrated] = useState(false);
 
@@ -50,6 +63,14 @@ export function ImportClient() {
     if (!parsed?.test) return;
     setSaved(importedTests.save(parsed.test));
     setParsed(null);
+  }
+
+  async function publish() {
+    if (!parsed?.test) return;
+    setPublishState("publishing");
+    const ok = await publishTest(parsed.test).catch(() => false);
+    setPublishState(ok ? "done" : "failed");
+    if (ok) setParsed(null);
   }
 
   function remove(id: string) {
@@ -153,10 +174,32 @@ export function ImportClient() {
                   <Button onClick={save} variant="accent">
                     Save to this browser
                   </Button>
+                  {isAdmin && (
+                    <Button
+                      onClick={() => void publish()}
+                      variant="outline"
+                      disabled={publishState === "publishing"}
+                    >
+                      {publishState === "publishing"
+                        ? "Publishing…"
+                        : "Publish to everyone"}
+                    </Button>
+                  )}
                   <Button variant="ghost" onClick={() => setParsed(null)}>
                     Discard
                   </Button>
                 </div>
+                {isAdmin && (
+                  <p className="mt-3 text-xs text-muted-foreground">
+                    Publishing puts this paper in the shared library, where
+                    every signed-in user can sit it.
+                  </p>
+                )}
+                {publishState === "failed" && (
+                  <p className="mt-3 text-xs text-rose-500">
+                    Could not publish. You may no longer have permission.
+                  </p>
+                )}
               </>
             )}
           </CardBody>
