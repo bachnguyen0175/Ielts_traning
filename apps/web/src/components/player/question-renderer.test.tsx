@@ -102,6 +102,32 @@ const notes: QuestionGroup = {
   ],
 };
 
+const ownOptions: QuestionGroup = {
+  id: "g",
+  range: [1, 2],
+  type: "multiple_choice_single",
+  instruction: "Choose the correct letter, A, B, C or D.",
+  answerMatch: { kind: "letter" },
+  questions: [
+    {
+      number: 1,
+      content: "The writer mentions the city to show that",
+      options: [
+        { label: "A", text: "the work is invisible to most people." },
+        { label: "B", text: "bakers prefer to be left alone." },
+      ],
+    },
+    {
+      number: 2,
+      content: "According to the passage, the shift begins",
+      options: [
+        { label: "A", text: "at midday." },
+        { label: "B", text: "before dawn." },
+      ],
+    },
+  ],
+};
+
 describe("QuestionRenderer", () => {
   it("MCQ: selecting an option answers with the letter", async () => {
     const onAnswer = vi.fn();
@@ -204,6 +230,32 @@ describe("QuestionRenderer", () => {
   it("notes completion: falls back to a listed box for a blank the parse missed", () => {
     render(<QuestionRenderer group={notes} responses={{}} onAnswer={() => {}} />);
     expect(screen.getByLabelText(/question 3/i)).toBeInTheDocument();
+  });
+
+  it("multiple choice: each question shows its own choices, with their text", () => {
+    const onAnswer = vi.fn();
+    render(
+      <QuestionRenderer group={ownOptions} responses={{}} onAnswer={onAnswer} />,
+    );
+    // Pooled into one shared list, every question showed all four.
+    expect(screen.getAllByRole("radio")).toHaveLength(4);
+    // Without a key above, the choice has to carry its own words.
+    expect(screen.getByText("at midday.")).toBeInTheDocument();
+    expect(
+      screen.getByText("the work is invisible to most people."),
+    ).toBeInTheDocument();
+  });
+
+  it("multiple choice: a neighbour's answer does not use up a letter", () => {
+    render(
+      <QuestionRenderer
+        group={ownOptions}
+        responses={{ 1: "A" }}
+        onAnswer={() => {}}
+      />,
+    );
+    // Each question has its own A-D, so nothing here is "already used".
+    expect(screen.queryByLabelText(/already used/i)).toBeNull();
   });
 
   it("shows nothing selected while a question is unanswered", () => {

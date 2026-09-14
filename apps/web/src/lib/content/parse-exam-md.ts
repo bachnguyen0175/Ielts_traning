@@ -189,7 +189,9 @@ interface RawGroup {
   to: number;
   instruction: string[];
   stems: Map<number, string>;
-  options: { label: string; text: string }[];
+  /** `afterStem` is the stem this option line followed, if any — a
+   *  multiple-choice question prints its options directly under its stem. */
+  options: { label: string; text: string; afterStem: number | null }[];
   tableRows: string[][];
   noteLines: string[];
   /** last stem seen, so a stem that wraps onto the next line can continue */
@@ -315,7 +317,11 @@ export function parseExamMarkdown(source: string): ExamParseResult {
       // option line apart from prose that merely starts with a capital.
       const opt = /^([A-Z]|[ivxIVX]+)\s{2,}(.+)$/.exec(unmark(raw));
       if (opt && (opt[1].length === 1 || ROMAN.test(opt[1]))) {
-        group.options.push({ label: opt[1], text: plain(opt[2]) });
+        group.options.push({
+          label: opt[1],
+          text: plain(opt[2]),
+          afterStem: group.lastStem,
+        });
         continue;
       }
       // "**1**   a reference to characteristics..."
@@ -399,9 +405,24 @@ export function parseExamMarkdown(source: string): ExamParseResult {
         `${instruction} ${rg.options.map((o) => o.text).join(" ")}`,
         rg.options.length
       );
-      let sharedOptions: Option[] = rg.options.map((o) =>
-        o.text ? { label: o.label, text: o.text } : { label: o.label }
-      );
+      // A multiple-choice question prints its OWN A-D under its stem; a
+      // matching group prints one list, once, and shares it. Pooled into a
+      // single bucket, a six-question group hands every question all 24
+      // choices and prints A-D six times over, so split it back out.
+      const ownOptions = new Map<number, Option[]>();
+      if (guess.type === "multiple_choice_single") {
+        for (const o of rg.options) {
+          if (o.afterStem === null) continue;
+          const list = ownOptions.get(o.afterStem) ?? [];
+          list.push(o.text ? { label: o.label, text: o.text } : { label: o.label });
+          ownOptions.set(o.afterStem, list);
+        }
+      }
+      let sharedOptions: Option[] = ownOptions.size > 0
+        ? []
+        : rg.options.map((o) =>
+            o.text ? { label: o.label, text: o.text } : { label: o.label }
+          );
       // Paragraph-matching groups rarely print a list; they state the span in
       // prose ("Reading Passage 1 has nine paragraphs, A-I"). Expand it.
       if (sharedOptions.length === 0) {
@@ -438,6 +459,7 @@ export function parseExamMarkdown(source: string): ExamParseResult {
       const questions: Question[] = [];
       const acceptSet: string[] = [];
       const noStem: number[] = [];
+      const noOptions: number[] = [];
       for (let n = rg.from; n <= rg.to; n += 1) {
         const answer = answers.get(n);
         if (answer === undefined) {
@@ -451,6 +473,9 @@ export function parseExamMarkdown(source: string): ExamParseResult {
           const stem = rg.stems.get(n) ?? bodyStems.get(n);
           if (stem) q.content = stem;
           else noStem.push(n);
+          const own = ownOptions.get(n);
+          if (own) q.options = own;
+          else if (ownOptions.size > 0) noOptions.push(n);
           if (answer) q.accept = [answer];
           questions.push(q);
         }
@@ -462,7 +487,17 @@ export function parseExamMarkdown(source: string): ExamParseResult {
       if (noStem.length > 0) {
         warn(rg.line, `question ${noStem.join(", ")} has no text — the player will show a bare number`);
       }
-      if (LISTED_TYPES.has(guess.type) && sharedOptions.every((opt) => !opt.text)) {
+      // Its neighbours printed their choices, so this one's were meant to be
+      // there. Without them the player falls back to bare letters, which is
+      // nothing a candidate can choose between.
+      if (noOptions.length > 0) {
+        warn(rg.line, `question ${noOptions.join(", ")} has no choices of its own — the player will show bare letters`);
+      }
+      if (
+        LISTED_TYPES.has(guess.type) &&
+        ownOptions.size === 0 &&
+        sharedOptions.every((opt) => !opt.text)
+      ) {
         warn(rg.line, `questions ${rg.from}-${rg.to} offer letters with nothing beside them — the printed list of options was not found`);
       }
       if (BY_PARAGRAPH.has(guess.type) && paragraphLabels.length === 0) {

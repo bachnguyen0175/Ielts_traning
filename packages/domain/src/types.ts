@@ -37,6 +37,12 @@ export interface Question {
   accept?: string[];
   /** marks this question as a slot of a letter-set group */
   acceptSetMember?: boolean;
+  /**
+   * The question's OWN printed choices. A multiple-choice question prints a
+   * fresh A-D under its stem, unlike a matching group, where one list is
+   * printed once and shared — that list lives on `QuestionGroup.sharedOptions`.
+   */
+  options?: Option[];
 }
 
 /**

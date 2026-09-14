@@ -185,21 +185,33 @@ function QuestionList({
   onAnswer,
   disabled,
 }: RendererProps & { numbers: number[] }) {
-  const options = optionsFor(group);
-  const showKey = options?.some((o) => o.text) ?? false;
+  const groupOptions = optionsFor(group);
+  // A multiple-choice question carries its own A-D. Those are printed under
+  // the stem they belong to, so there is no shared key above — and no letter
+  // can be "used up" by a neighbour, because each question has its own list.
+  const ownOptions = group.questions.some((q) => q.options?.length);
+  const showKey = !ownOptions && (groupOptions?.some((o) => o.text) ?? false);
   // A matching group whose letters are used once each: dim the ones already
   // spent so the candidate can see what is left.
-  const singleUse = group.answerMatch.kind === "letter" && !group.optionsReusable;
+  const singleUse =
+    !ownOptions &&
+    group.answerMatch.kind === "letter" &&
+    !group.optionsReusable;
 
   return (
     <div className="space-y-5">
-      {showKey && <OptionKey options={options!} />}
+      {showKey && <OptionKey options={groupOptions!} />}
       <ol className="space-y-6">
         {group.questions
           .filter((q) => numbers.includes(q.number))
           .map((q) => {
             const answer = responses[q.number];
             const answered = answer != null && answer !== "";
+
+            const options = q.options?.length ? q.options : groupOptions;
+            // Options stack when they carry their own text; bare letters sit
+            // in a row.
+            const lettersOnly = !options?.some((o) => o.text);
 
             return (
               <li key={q.number} className="space-y-3">
@@ -214,13 +226,17 @@ function QuestionList({
                   <fieldset
                     role="radiogroup"
                     aria-label={`Question ${q.number}`}
-                    className="flex flex-wrap gap-2 pl-9"
+                    className={cx(
+                      "flex gap-2 pl-9",
+                      lettersOnly ? "flex-wrap" : "flex-col",
+                    )}
                   >
                     {options.map((opt) => (
                       <OptionButton
                         key={opt.label}
-                        // The text lives in the key above; here a letter is enough.
-                        option={{ label: opt.label }}
+                        // With a key above, a letter here is enough; without
+                        // one, the choice has to carry its own text.
+                        option={showKey ? { label: opt.label } : opt}
                         id={`q${q.number}-${opt.label}`}
                         name={`q-${q.number}`}
                         type="radio"

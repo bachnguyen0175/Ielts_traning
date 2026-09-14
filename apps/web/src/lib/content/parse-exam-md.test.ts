@@ -504,3 +504,110 @@ Which **TWO** uses of kelp are mentioned?
     expect(groups[0].instruction).not.toMatch(/TWO letters/);
   });
 });
+
+// A multiple-choice question prints its own A-D under its stem, unlike a
+// matching group, which prints one list and shares it. Original prose.
+const MCQ_PAPER = `# Composed Practice — Reading Test 11
+
+**Source:** [example](https://example.com/paper)
+
+---
+
+### **READING PASSAGE 1**
+
+You should spend about 20 minutes on **Questions 1-2**.
+
+## **The night shift**
+
+Bakers start work long before dawn, and the city sleeps through the noise.
+
+#### **Questions 1-2**
+
+Choose the correct letter, **A**, **B**, **C** or **D**.
+
+**1**   The writer mentions the city to show that
+
+**A**   the work is invisible to most people.
+
+**B**   bakers prefer to be left alone.
+
+**C**   the noise is a common complaint.
+
+**D**   few people eat bread now.
+
+**2**   According to the passage, the shift begins
+
+**A**   at midday.
+
+**B**   at dusk.
+
+**C**   before dawn.
+
+**D**   after breakfast.
+
+## **Answer Composed Practice Reading Test 11**
+
+##### Passage 1
+
+1. A
+
+2. C
+`;
+
+describe("parseExamMarkdown — multiple choice, one question at a time", () => {
+  const group = parseExamMarkdown(MCQ_PAPER).test!.sections[0].passages![0]
+    .questionGroups[0];
+
+  it("gives each question its own choices", () => {
+    expect(group.questions.map((q) => q.options?.map((o) => o.label))).toEqual([
+      ["A", "B", "C", "D"],
+      ["A", "B", "C", "D"],
+    ]);
+    expect(group.questions[1].options?.map((o) => o.text)).toEqual([
+      "at midday.",
+      "at dusk.",
+      "before dawn.",
+      "after breakfast.",
+    ]);
+  });
+
+  it("pools nothing into the group's shared list", () => {
+    // Pooled, a two-question group handed every question all eight choices.
+    expect(group.sharedOptions ?? []).toEqual([]);
+  });
+
+  it("still reads the answer key", () => {
+    expect(group.questions.map((q) => q.accept)).toEqual([["A"], ["C"]]);
+  });
+
+  it("says nothing about a missing printed list", () => {
+    const warnings = parseExamMarkdown(MCQ_PAPER).diagnostics.filter(
+      (d) => d.severity === "warning",
+    );
+    expect(warnings).toEqual([]);
+  });
+
+  it("leaves a genuinely shared list on the group", () => {
+    // PAPER's questions 3-4 match against one printed list of people.
+    const shared = parseExamMarkdown(PAPER).test!.sections[0].passages![0]
+      .questionGroups[1];
+    expect(shared.sharedOptions).toHaveLength(2);
+    expect(shared.questions.every((q) => q.options === undefined)).toBe(true);
+  });
+});
+
+describe("parseExamMarkdown — answerability of multiple choice", () => {
+  it("warns when one question's choices did not parse", () => {
+    // Its neighbour printed A-D, so the player would fall back to bare letters.
+    const dropped = MCQ_PAPER.replace(
+      "**A**   at midday.\n\n**B**   at dusk.\n\n**C**   before dawn.\n\n**D**   after breakfast.\n",
+      "",
+    );
+    const warnings = parseExamMarkdown(dropped).diagnostics
+      .filter((d) => d.severity === "warning")
+      .map((d) => d.message);
+    expect(warnings).toContainEqual(
+      expect.stringMatching(/question 2 has no choices of its own/),
+    );
+  });
+});
