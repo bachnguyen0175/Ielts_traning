@@ -15,7 +15,7 @@ export function loadPublishedTests(): Promise<void> {
     .then((tests) => publishedTests.hydrate(tests))
     // Signed out or offline: the built-in and imported tests still work, and
     // `ready` still flips so nothing waits on a load that will not come.
-    .catch(() => publishedTests.hydrate())
+    .catch(() => publishedTests.failed())
     .finally(() => {
       inFlight = null;
     });

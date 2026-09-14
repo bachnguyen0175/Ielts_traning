@@ -12,8 +12,6 @@ const paper = (id: string): Test => ({
 describe("publishedTests store", () => {
   beforeEach(() => {
     publishedTests.hydrate([]);
-    // hydrate([]) leaves the cache alone by design; reset it explicitly.
-    publishedTests.hydrate([paper("reset")]);
   });
 
   it("returns the same array reference between changes", () => {
@@ -38,10 +36,20 @@ describe("publishedTests store", () => {
     expect(seen).toHaveBeenCalledTimes(1);
   });
 
-  it("still becomes ready when the fetch fails", () => {
-    // The loader calls hydrate() with nothing on error, so screens waiting on
-    // `ready` are released instead of showing "Loading…" forever.
-    publishedTests.hydrate();
+  it("empties when the last published test is taken down", () => {
+    publishedTests.hydrate([paper("a")]);
+    expect(publishedTests.list()).toHaveLength(1);
+    // An empty fetch means an empty library, not "nothing to do" — leaving the
+    // old list up would keep an unpublished paper on screen until a reload.
+    publishedTests.hydrate([]);
+    expect(publishedTests.list()).toEqual([]);
+  });
+
+  it("keeps what it has when the fetch fails, but stops waiting", () => {
+    publishedTests.hydrate([paper("a")]);
+    publishedTests.failed();
+    // A dropped connection is not evidence that the library is empty.
+    expect(publishedTests.list()).toHaveLength(1);
     expect(publishedTests.ready()).toBe(true);
   });
 });

@@ -30,9 +30,23 @@ export const publishedTests = {
    * id would call it missing before it could arrive.
    */
   ready: () => loaded,
-  /** Called by the loader once the fetch resolves — or fails, hence no data. */
-  hydrate(tests?: Test[]): void {
-    if (tests && tests.length > 0) cache = tests;
+  /**
+   * Called by the loader when the fetch RESOLVES. An empty result means the
+   * library is empty — unpublishing the last test has to empty the store too,
+   * so this cannot treat `[]` as "nothing to do" and leave yesterday's list on
+   * screen. EMPTY rather than the incoming `[]` keeps the reference stable.
+   */
+  hydrate(tests: Test[]): void {
+    cache = tests.length > 0 ? tests : EMPTY;
+    loaded = true;
+    for (const l of listeners) l();
+  },
+  /**
+   * Called by the loader when the fetch FAILS. Keeps whatever is cached — a
+   * dropped connection is not evidence that the library is empty — but still
+   * releases anything waiting on `ready`.
+   */
+  failed(): void {
     loaded = true;
     for (const l of listeners) l();
   },
