@@ -68,6 +68,13 @@ export interface QuestionGroup {
    * no blanks. A cell marks question n's blank with the token `[[n]]`.
    */
   table?: string[][];
+  /**
+   * Notes/summary-completion layout: the printed body, one entry per bullet or
+   * paragraph, in print order. An entry marks question n's blank with the token
+   * `[[n]]` — the same marker `table` uses. A leading bullet character is kept,
+   * because that is how the paper prints it.
+   */
+  notes?: string[];
 }
 
 export interface Passage {

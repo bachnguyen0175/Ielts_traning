@@ -84,6 +84,24 @@ const table: QuestionGroup = {
   ],
 };
 
+const notes: QuestionGroup = {
+  id: "g",
+  range: [1, 3],
+  type: "summary_completion",
+  instruction: "Complete the notes below.",
+  answerMatch: { kind: "text" },
+  notes: [
+    "● the plant grips the rock with a [[1]]",
+    "● the [[2]] shelters young fish",
+    "● the forest grows in cold water",
+  ],
+  questions: [
+    { number: 1, content: "● the plant grips the rock with a ___" },
+    { number: 2, content: "● the ___ shelters young fish" },
+    { number: 3, content: "unmatched blank" },
+  ],
+};
+
 describe("QuestionRenderer", () => {
   it("MCQ: selecting an option answers with the letter", async () => {
     const onAnswer = vi.fn();
@@ -166,6 +184,26 @@ describe("QuestionRenderer", () => {
     // The raw markdown never reaches the screen.
     expect(screen.queryByText(/\[\[/)).toBeNull();
     expect(screen.queryByText(/\| ---/)).toBeNull();
+  });
+
+  it("notes completion: puts an input at each blank, in the printed line", () => {
+    const onAnswer = vi.fn();
+    render(<QuestionRenderer group={notes} responses={{}} onAnswer={onAnswer} />);
+    // The sentence around the blank survives — that is what makes it answerable.
+    expect(screen.getByText(/the plant grips the rock with a/)).toBeInTheDocument();
+    // A printed note with no blank is still shown.
+    expect(screen.getByText(/the forest grows in cold water/)).toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText(/question 1/i), {
+      target: { value: "holdfast" },
+    });
+    expect(onAnswer).toHaveBeenCalledWith(1, "holdfast");
+    // The raw markers never reach the screen.
+    expect(screen.queryByText(/\[\[/)).toBeNull();
+  });
+
+  it("notes completion: falls back to a listed box for a blank the parse missed", () => {
+    render(<QuestionRenderer group={notes} responses={{}} onAnswer={() => {}} />);
+    expect(screen.getByLabelText(/question 3/i)).toBeInTheDocument();
   });
 
   it("shows nothing selected while a question is unanswered", () => {

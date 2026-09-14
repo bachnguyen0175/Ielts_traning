@@ -11,8 +11,8 @@ import type {
 
 // Parses an IELTS Reading paper written as "exam-paper markdown" — the shape a
 // practice paper takes when a printed/published test is transcribed: passage
-// headings, lettered paragraphs, `#### Questions n-m` blocks, option lists, and
-// an answer key at the end.
+// headings, lettered paragraphs, `#### Questions n-m` (or `n and m`) blocks,
+// option lists, and an answer key at the end.
 //
 // This is a SECOND, separate dialect from `parse-md.ts`. That one reads the
 // authored `.test.md` format we design and commit; this one reads papers as
@@ -61,6 +61,18 @@ const LEADER = /\s*(?:[….]{3,}|_{3,})\s*/g;
 
 /** A numbered blank inside a table cell: "27……………" */
 const CELL_BLANK = /(\d{1,2})\s*(?:[….]{3,}|_{3,})/g;
+
+/** A printed list marker: the notes body prints one bullet per line. */
+const BULLET = /^[●•·-]\s/;
+
+/** The same test for one line. Separate because `.test` on a /g regex is
+ *  stateful, so sharing CELL_BLANK would skip every other line. */
+const HAS_BLANK = new RegExp(CELL_BLANK.source);
+
+/** Rewrites printed blanks as the app's `[[n]]` marker. */
+function withBlankTokens(s: string): string {
+  return s.replace(CELL_BLANK, (_, n) => `[[${n}]]`);
+}
 
 /** Replaces printed leaders with the app's blank marker. */
 function withBlanks(s: string): string {
@@ -179,6 +191,7 @@ interface RawGroup {
   stems: Map<number, string>;
   options: { label: string; text: string }[];
   tableRows: string[][];
+  noteLines: string[];
   /** last stem seen, so a stem that wraps onto the next line can continue */
   lastStem: number | null;
 }
@@ -192,7 +205,11 @@ interface RawPassage {
 }
 
 const PASSAGE_RE = /^reading passage\s+(\d+)/i;
-const QUESTIONS_RE = /^questions?\s+(\d+)\s*[-–—]\s*(\d+)/i;
+// "Questions 14-18", and also "Questions 23 and 24" — papers print a two-answer
+// group as a conjunction rather than a range. \b keeps "23and24" out; without
+// the `and` form the heading is not recognised, so the group is never opened
+// and its questions land in the group above it.
+const QUESTIONS_RE = /^questions?\s+(\d+)\s*(?:[-–—]|\band\b)\s*(\d+)/i;
 const ANSWER_HEAD_RE = /answer/i;
 
 export function parseExamMarkdown(source: string): ExamParseResult {
@@ -266,6 +283,7 @@ export function parseExamMarkdown(source: string): ExamParseResult {
           stems: new Map(),
           options: [],
           tableRows: [],
+          noteLines: [],
           lastStem: null,
         };
         passage.groups.push(group);
@@ -316,6 +334,29 @@ export function parseExamMarkdown(source: string): ExamParseResult {
       if (group.lastStem !== null) {
         const head = group.stems.get(group.lastStem) ?? "";
         group.stems.set(group.lastStem, withBlanks(`${head} ${text}`));
+        continue;
+      }
+      // Notes/summary completion prints its blanks inside the printed body
+      // ("the 2…… surrounds the fruit"). Keep the line whole: flattened into
+      // the instruction it is unreadable, and the blank loses the sentence
+      // that gives it meaning.
+      //
+      // Below the stem branches, so these two can only claim a line that used
+      // to fall through to the instruction — never one a stem would have taken.
+      if (HAS_BLANK.test(text)) {
+        group.noteLines.push(withBlankTokens(text));
+        continue;
+      }
+      // A trailing note carries no blank ("the tree has yellow flowers and
+      // fruit") but is still printed, so it belongs to the body.
+      //
+      // Only a further BULLET continues the body, never loose prose. A heading
+      // this parser does not recognise — "Questions 23 and 24", which has no
+      // dash — leaves us inside the previous group, so a rule that ran to the
+      // end of the group would swallow the next rubric and the passage after
+      // it. Loose prose keeps its old home in the instruction.
+      if (group.noteLines.length > 0 && BULLET.test(text)) {
+        group.noteLines.push(text);
         continue;
       }
       group.instruction.push(text);
@@ -382,19 +423,15 @@ export function parseExamMarkdown(source: string): ExamParseResult {
       // in as that question's stem.
       const table =
         rg.tableRows.length > 0
-          ? rg.tableRows.map((row) =>
-              row.map((cell) => cell.replace(CELL_BLANK, (_, n) => `[[${n}]]`))
-            )
+          ? rg.tableRows.map((row) => row.map(withBlankTokens))
           : null;
-      const tableStems = new Map<number, string>();
-      for (const row of table ?? []) {
-        for (const cell of row) {
-          for (const m of cell.matchAll(/\[\[(\d+)\]\]/g)) {
-            tableStems.set(
-              Number(m[1]),
-              cell.replace(/\[\[\d+\]\]/g, "___")
-            );
-          }
+      const notes = rg.noteLines.length > 0 ? rg.noteLines : null;
+      // The cell or line a blank sits in is that question's stem, so a review
+      // screen listing questions one by one still has something to show.
+      const bodyStems = new Map<number, string>();
+      for (const cell of [...(table ?? []).flat(), ...(notes ?? [])]) {
+        for (const m of cell.matchAll(/\[\[(\d+)\]\]/g)) {
+          bodyStems.set(Number(m[1]), cell.replace(/\[\[\d+\]\]/g, "___"));
         }
       }
 
@@ -411,7 +448,7 @@ export function parseExamMarkdown(source: string): ExamParseResult {
           questions.push({ number: n, acceptSetMember: true });
         } else {
           const q: Question = { number: n };
-          const stem = rg.stems.get(n) ?? tableStems.get(n);
+          const stem = rg.stems.get(n) ?? bodyStems.get(n);
           if (stem) q.content = stem;
           else noStem.push(n);
           if (answer) q.accept = [answer];
@@ -444,6 +481,7 @@ export function parseExamMarkdown(source: string): ExamParseResult {
         ...(isLetterSet ? { selectCount: guess.selectCount ?? width } : {}),
         ...(isLetterSet ? { acceptSet } : {}),
         ...(table ? { table } : {}),
+        ...(notes ? { notes } : {}),
       };
       return group;
     });

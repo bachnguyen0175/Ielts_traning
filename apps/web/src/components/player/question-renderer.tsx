@@ -27,6 +27,10 @@ export function QuestionRenderer(props: RendererProps) {
   // A table completion prints its blanks inside the table, so the table *is*
   // the question list.
   if (group.table) return <TableCompletion {...props} />;
+  // Notes and summaries print their blanks inside the body text, so the body
+  // *is* the question list — same as a table. Length, not presence: an empty
+  // array would render a body with no lines and every question orphaned.
+  if (group.notes?.length) return <NotesCompletion {...props} />;
   // "Choose TWO letters, A-E" is one choice filling several answer boxes, not
   // one choice per box.
   if (group.answerMatch.kind === "letter-set") return <LetterSet {...props} />;
@@ -313,18 +317,19 @@ function LetterSet({ group, responses, onAnswer, disabled }: RendererProps) {
 
 const BLANK_TOKEN = /\[\[(\d+)\]\]/;
 
-function TableCell({
-  cell,
+/** Renders one printed line or cell, with an input wherever `[[n]]` appears. */
+function BlankText({
+  text,
   responses,
   onAnswer,
   disabled,
 }: {
-  cell: string;
+  text: string;
   responses: Record<number, string>;
   onAnswer: (n: number, v: string) => void;
   disabled?: boolean;
 }) {
-  const parts = cell.split(/(\[\[\d+\]\])/).filter((p) => p !== "");
+  const parts = text.split(/(\[\[\d+\]\])/).filter((p) => p !== "");
   return (
     <>
       {parts.map((part, i) => {
@@ -398,8 +403,8 @@ function TableCompletion({
                     key={c}
                     className="border border-border px-3 py-2.5 leading-relaxed text-foreground"
                   >
-                    <TableCell
-                      cell={cell}
+                    <BlankText
+                      text={cell}
                       responses={responses}
                       onAnswer={onAnswer}
                       disabled={disabled}
@@ -410,6 +415,52 @@ function TableCompletion({
             ))}
           </tbody>
         </table>
+      </div>
+      {orphans.length > 0 && (
+        <QuestionList
+          group={group}
+          numbers={orphans}
+          responses={responses}
+          onAnswer={onAnswer}
+          disabled={disabled}
+        />
+      )}
+    </div>
+  );
+}
+
+function NotesCompletion({
+  group,
+  responses,
+  onAnswer,
+  disabled,
+}: RendererProps) {
+  const lines = group.notes ?? [];
+  const inNotes = new Set(
+    lines.flatMap((line) =>
+      [...line.matchAll(/\[\[(\d+)\]\]/g)].map((m) => Number(m[1])),
+    ),
+  );
+  // A blank the notes parse missed would otherwise be unanswerable.
+  const orphans = group.questions
+    .map((q) => q.number)
+    .filter((n) => !inNotes.has(n));
+
+  return (
+    <div className="space-y-6">
+      {/* leading-loose: the inline inputs are taller than the text, and
+          without it the wrapped lines collide. */}
+      <div className="space-y-2 leading-loose text-foreground">
+        {lines.map((line, i) => (
+          <p key={i}>
+            <BlankText
+              text={line}
+              responses={responses}
+              onAnswer={onAnswer}
+              disabled={disabled}
+            />
+          </p>
+        ))}
       </div>
       {orphans.length > 0 && (
         <QuestionList

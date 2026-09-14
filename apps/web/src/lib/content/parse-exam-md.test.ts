@@ -335,3 +335,172 @@ describe("parseExamMarkdown — failure modes", () => {
     expect(errorsOf(diagnostics)).toContain("question 7 has no answer in the key");
   });
 });
+
+// Notes and summaries print their blanks inside the body text rather than in a
+// table or a numbered stem. Original prose, same as PAPER above.
+const NOTES_PAPER = `# Composed Practice — Reading Test 10
+
+**Source:** [example](https://example.com/paper)
+
+---
+
+### **READING PASSAGE 1**
+
+You should spend about 20 minutes on **Questions 1-4**.
+
+## **The kelp forest**
+
+Giant kelp anchors itself to rock with a holdfast, and its blades float on gas
+bladders. The canopy shelters young fish, and the stipe is harvested for algin.
+
+#### **Questions 1-4**
+
+Complete the notes below.
+
+Choose **ONE WORD ONLY** from the passage for each answer.
+
+#### **The kelp plant**
+
+●   the plant grips the rock with a **1**……………………
+
+●   the blades are held up by gas **2**……………………
+
+●   the **3**…………………… shelters young fish
+
+●   algin is extracted from the **4**……………………
+
+●   the forest grows in cold water
+
+## **Answer Composed Practice Reading Test 10**
+
+##### Passage 1
+
+1. holdfast
+
+2. bladders
+
+3. canopy
+
+4. stipe
+`;
+
+describe("parseExamMarkdown — notes completion", () => {
+  const group = parseExamMarkdown(NOTES_PAPER).test!.sections[0].passages![0]
+    .questionGroups[0];
+
+  it("keeps the printed notes body instead of flattening it into the instruction", () => {
+    expect(group.notes).toEqual([
+      "● the plant grips the rock with a [[1]]",
+      "● the blades are held up by gas [[2]]",
+      "● the [[3]] shelters young fish",
+      "● algin is extracted from the [[4]]",
+      // Carries no blank, but is printed, so it belongs to the body.
+      "● the forest grows in cold water",
+    ]);
+    // The body used to land here, dotted leaders and all.
+    expect(group.instruction).not.toMatch(/grips the rock/);
+    expect(group.instruction).not.toMatch(/cold water/);
+  });
+
+  it("takes the line a blank sits in as that question's stem", () => {
+    expect(group.questions.map((q) => q.content)).toEqual([
+      "● the plant grips the rock with a ___",
+      "● the blades are held up by gas ___",
+      "● the ___ shelters young fish",
+      "● algin is extracted from the ___",
+    ]);
+  });
+
+  it("still reads the answer key", () => {
+    expect(group.questions.map((q) => q.accept)).toEqual([
+      ["holdfast"],
+      ["bladders"],
+      ["canopy"],
+      ["stipe"],
+    ]);
+  });
+
+  it("stops the body at prose, so an unrecognised heading cannot run away", () => {
+    // "Questions 5 & 6" is a heading QUESTIONS_RE does not match, so the parse
+    // is still inside the notes group. The body must not swallow the next
+    // rubric — or, after it, the whole of the following passage.
+    const runaway = NOTES_PAPER.replace(
+      "## **Answer Composed Practice Reading Test 10**",
+      `#### **Questions 5 & 6**
+
+Choose **TWO** letters, **A-E**.
+
+Which **TWO** uses are mentioned?
+
+## **Answer Composed Practice Reading Test 10**`,
+    );
+    const g = parseExamMarkdown(runaway).test!.sections[0].passages![0]
+      .questionGroups[0];
+    expect(g.notes).toHaveLength(5);
+    expect(g.notes!.join(" ")).not.toMatch(/TWO letters/);
+  });
+
+  it("leaves a candidate nothing to be warned about", () => {
+    const warnings = parseExamMarkdown(NOTES_PAPER).diagnostics.filter(
+      (d) => d.severity === "warning",
+    );
+    expect(warnings).toEqual([]);
+  });
+});
+
+describe("parseExamMarkdown — a group headed with a conjunction", () => {
+  // Papers print a two-answer group as "Questions 23 and 24", not as a range.
+  // Unmatched, the heading opened no group, so its questions vanished and its
+  // rubric and options were absorbed by the group above — which then inferred
+  // the WRONG TYPE from the borrowed "Choose TWO letters".
+  const CONJUNCTION_PAPER = NOTES_PAPER.replace(
+    "## **Answer Composed Practice Reading Test 10**",
+    `#### **Questions 5 and 6**
+
+Choose **TWO** letters, **A-E**.
+
+Which **TWO** uses of kelp are mentioned?
+
+**A**     food thickener
+
+**B**     building timber
+
+**C**     fish shelter
+
+**D**     desert farming
+
+**E**     road surfacing
+
+## **Answer Composed Practice Reading Test 10**`,
+  ).replace("4. stipe", "4. stipe\n\n5. A\n\n6. C");
+
+  const groups = parseExamMarkdown(CONJUNCTION_PAPER).test!.sections[0]
+    .passages![0].questionGroups;
+
+  it("opens a group for it, so its questions exist at all", () => {
+    expect(groups.map((g) => g.range)).toEqual([
+      [1, 4],
+      [5, 6],
+    ]);
+  });
+
+  it("reads it as a letter set with its own options", () => {
+    expect(groups[1].type).toBe("multiple_choice_multi");
+    expect(groups[1].selectCount).toBe(2);
+    expect(groups[1].acceptSet).toEqual(["A", "C"]);
+    expect(groups[1].sharedOptions?.map((o) => o.label)).toEqual([
+      "A",
+      "B",
+      "C",
+      "D",
+      "E",
+    ]);
+  });
+
+  it("leaves the group above it untouched", () => {
+    // It used to inherit the options below and be typed from their rubric.
+    expect(groups[0].type).toBe("summary_completion");
+    expect(groups[0].sharedOptions).toBeUndefined();
+    expect(groups[0].instruction).not.toMatch(/TWO letters/);
+  });
+});
